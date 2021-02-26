@@ -8,6 +8,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -341,6 +342,23 @@ public abstract class DataType {
         }
     }
 
+    public static class DtEnum extends DataType {
+
+        protected DtEnum(@NonNull String name) {
+            super(name);
+        }
+
+        @Override
+        public short compareTo(@NonNull DataType target) {
+            if (target instanceof DtEnum) {
+                if (name().compareTo(target.name) == 0) {
+                    return 0;
+                }
+            }
+            return RET_INCOMPATIBLE;
+        }
+    }
+
     private static final String COLLECTION_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*>";
     private static final String MAP_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*,\\s*(\\w+)\\s*>";
     private static final Pattern COLLECTION_PATTERN = Pattern.compile(COLLECTION_STRING);
@@ -384,6 +402,11 @@ public abstract class DataType {
             }
             return new DtCollection(bit);
         }
+        return null;
+    }
+
+    public static DataType convert(@NonNull Field field) {
+        
         return null;
     }
 }

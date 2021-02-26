@@ -13,7 +13,9 @@ public class Field extends Vertex {
     @Setter(AccessLevel.NONE)
     private final Class<?> entityType;
     private final DataType dataType;
+    @Setter(AccessLevel.NONE)
     private String name;
+    @Setter(AccessLevel.NONE)
     private FieldPath path;
 
     public Field(@NonNull Class<?> entityType, @NonNull DataType dataType) {
@@ -21,7 +23,10 @@ public class Field extends Vertex {
         this.dataType = dataType;
     }
 
-    public boolean isValid(String path) {
-        return false;
+    public Field withPath(@NonNull String path) throws IllegalArgumentException {
+        this.path = new FieldPath();
+        this.path.withPath(path, entityType);
+
+        return this;
     }
 }
