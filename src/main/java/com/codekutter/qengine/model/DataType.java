@@ -17,6 +17,8 @@ import java.util.regex.Pattern;
 @Accessors(fluent = true)
 public abstract class DataType {
     protected static final int RET_INCOMPATIBLE = -999;
+    protected static final int RET_UNDERFLOW = -1;
+    protected static final int RET_OVERFLOW = 1;
 
     @Setter(AccessLevel.NONE)
     private String name;
@@ -123,6 +125,8 @@ public abstract class DataType {
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtShort || target instanceof DtInteger) {
+                return RET_OVERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -132,10 +136,15 @@ public abstract class DataType {
         public DtShort() {
             super("short");
         }
+
         @Override
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtBoolean) {
+                return RET_UNDERFLOW;
+            } else if (target instanceof DtInteger || target instanceof DtLong) {
+                return RET_OVERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -145,10 +154,15 @@ public abstract class DataType {
         public DtInteger() {
             super("integer");
         }
+
         @Override
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtBoolean || target instanceof DtShort) {
+                return RET_UNDERFLOW;
+            } else if (target instanceof DtLong) {
+                return RET_OVERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -158,10 +172,13 @@ public abstract class DataType {
         public DtLong() {
             super("long");
         }
+
         @Override
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtBoolean || target instanceof DtShort || target instanceof DtInteger) {
+                return RET_UNDERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -176,6 +193,10 @@ public abstract class DataType {
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtBoolean || target instanceof DtShort || target instanceof DtInteger || target instanceof DtLong) {
+                return RET_UNDERFLOW;
+            } else if (target instanceof DtDouble) {
+                return RET_OVERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -190,6 +211,8 @@ public abstract class DataType {
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtBoolean || target instanceof DtShort || target instanceof DtInteger || target instanceof DtLong || target instanceof DtFloat) {
+                return RET_UNDERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -232,6 +255,8 @@ public abstract class DataType {
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtDateTime) {
+                return RET_OVERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -246,6 +271,8 @@ public abstract class DataType {
         public short compareTo(@NonNull DataType target) {
             if (equals(target)) {
                 return 0;
+            } else if (target instanceof DtDate) {
+                return RET_UNDERFLOW;
             }
             return RET_INCOMPATIBLE;
         }
@@ -267,29 +294,35 @@ public abstract class DataType {
 
     @Getter
     @Accessors(fluent = true)
-    public static class Collection extends DataType {
+    public static class DtCollection extends DataType {
         private static final String __NAME = "Collection<%s>";
         private final DataType dataType;
 
-        public Collection(@NonNull DataType dataType) {
+        public DtCollection(@NonNull DataType dataType) {
             super(String.format(__NAME, dataType.name));
             this.dataType = dataType;
         }
 
         @Override
         public short compareTo(@NonNull DataType target) {
-            return 0;
+            if (target instanceof DtCollection) {
+                DtCollection tc = (DtCollection) target;
+                if (dataType.equals(tc.dataType)) {
+                    return 0;
+                }
+            }
+            return RET_INCOMPATIBLE;
         }
     }
 
     @Getter
     @Accessors(fluent = true)
-    public static class Map extends DataType {
+    public static class DtMap extends DataType {
         private static final String __NAME = "Map<%s, %s>";
         private final BasicDataType key;
         private final DataType value;
 
-        public Map(@NonNull BasicDataType key, @NonNull DataType value) {
+        public DtMap(@NonNull BasicDataType key, @NonNull DataType value) {
             super(String.format(__NAME, key.name(), value.name));
             this.key = key;
             this.value = value;
@@ -297,7 +330,14 @@ public abstract class DataType {
 
         @Override
         public short compareTo(@NonNull DataType target) {
-            return 0;
+            if (target instanceof DtMap) {
+                if (key.equals(((DtMap) target).key)) {
+                    if (value.equals(((DtMap) target).value)) {
+                        return 0;
+                    }
+                }
+            }
+            return RET_INCOMPATIBLE;
         }
     }
 
@@ -306,7 +346,7 @@ public abstract class DataType {
     private static final Pattern COLLECTION_PATTERN = Pattern.compile(COLLECTION_STRING);
     private static final Pattern MAP_PATTERN = Pattern.compile(MAP_STRING);
 
-    public static DataType parse(@NonNull String value) {
+    public static DataType parse(@NonNull String value) throws IllegalArgumentException {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(value));
         BasicDataTypes dts = BasicDataTypes.parse(value);
         if (dts != null) {
@@ -314,7 +354,35 @@ public abstract class DataType {
         }
         Matcher matcher = MAP_PATTERN.matcher(value);
         if (matcher.matches()) {
-
+            String kt = matcher.group(2);
+            if (Strings.isNullOrEmpty(kt)) {
+                throw new IllegalArgumentException(String.format("Map Key datatype not found: [type string=%s]", value));
+            }
+            BasicDataType bkt = BasicDataTypes.parseType(kt);
+            if (bkt == null) {
+                throw new IllegalArgumentException(String.format("Data Type not supported: [key type=%s]", kt));
+            }
+            String vt = matcher.group(3);
+            if (Strings.isNullOrEmpty(vt)) {
+                throw new IllegalArgumentException(String.format("Map Value datatype not found: [type string=%s]", value));
+            }
+            DataType vdt = parse(vt);
+            if (vdt == null) {
+                throw new IllegalArgumentException(String.format("Specified Map value type not found: [value type=%s]", vt));
+            }
+            return new DtMap(bkt, vdt);
+        }
+        matcher = COLLECTION_PATTERN.matcher(value);
+        if (matcher.matches()) {
+            String vt = matcher.group(1);
+            if (Strings.isNullOrEmpty(vt)) {
+                throw new IllegalArgumentException(String.format("Collection Inner Type not found: [type string=%s]", value));
+            }
+            BasicDataType bit = BasicDataTypes.parseType(vt);
+            if (bit == null) {
+                throw new IllegalArgumentException(String.format("Data Type not supported: [inner type=%s]", vt));
+            }
+            return new DtCollection(bit);
         }
         return null;
     }
