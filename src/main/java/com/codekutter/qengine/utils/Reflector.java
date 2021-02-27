@@ -2,9 +2,12 @@ package com.codekutter.qengine.utils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.List;
 import java.util.Map;
@@ -182,6 +185,73 @@ public class Reflector {
                 || type.equals(Float.class) || type.equals(float.class) ||
                 type.equals(Double.class) || type.equals(double.class)
                 || type.equals(Character.class) || type.equals(char.class);
+    }
+
+    public static Object getNestedFieldValue(@Nonnull Object source,
+                                             @Nonnull String name) throws Exception {
+        String[] parts = name.split("\\.");
+        Object value = source;
+        Class<?> type = source.getClass();
+        int index = 0;
+        while (index < parts.length) {
+            Field field = findField(type, parts[index]);
+            if (field == null) {
+                throw new Exception(String.format("Field not found. [type=%s][field=%s]",
+                        type.getCanonicalName(), parts[index]));
+            }
+            value = getFieldValue(value, field);
+            if (value == null) {
+                break;
+            }
+            type = field.getType();
+            index++;
+        }
+        return value;
+    }
+
+
+    /**
+     * Get the value of the specified field from the object passed.
+     * This assumes standard bean Getters/Setters.
+     *
+     * @param o     - Object to get field value from.
+     * @param field - Field value to extract.
+     * @return - Field value.
+     * @throws Exception
+     */
+    public static Object getFieldValue(@Nonnull Object o, @Nonnull Field field) throws Exception {
+        return getFieldValue(o, field, false);
+    }
+
+    public static Object getFieldValue(@Nonnull Object o, @Nonnull Field field, boolean ignore)
+            throws Exception {
+        Preconditions.checkArgument(o != null);
+        Preconditions.checkArgument(field != null);
+
+        String method = "get" + StringUtils.capitalize(field.getName());
+
+        Method m = MethodUtils.getAccessibleMethod(o.getClass(), method);
+        if (m == null) {
+            method = field.getName();
+            m = MethodUtils.getAccessibleMethod(o.getClass(), method);
+        }
+
+        if (m == null) {
+            Class<?> type = field.getType();
+            if (type.equals(boolean.class) || type.equals(Boolean.class)) {
+                method = "is" + StringUtils.capitalize(field.getName());
+                m = MethodUtils.getAccessibleMethod(o.getClass(), method);
+            }
+        }
+
+        if (m == null)
+            if (!ignore)
+                throw new Exception("No accessable method found for field. [field="
+                        + field.getName() + "][class="
+                        + o.getClass().getCanonicalName() + "]");
+            else return null;
+
+        return MethodUtils.invokeMethod(o, method);
     }
 
 }
