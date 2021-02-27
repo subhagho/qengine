@@ -1,5 +1,6 @@
 package com.codekutter.qengine.model;
 
+import com.codekutter.qengine.utils.Reflector;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.AccessLevel;
@@ -10,6 +11,8 @@ import lombok.experimental.Accessors;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -320,10 +323,10 @@ public abstract class DataType {
     @Accessors(fluent = true)
     public static class DtMap extends DataType {
         private static final String __NAME = "Map<%s, %s>";
-        private final BasicDataType key;
+        private final DataType key;
         private final DataType value;
 
-        public DtMap(@NonNull BasicDataType key, @NonNull DataType value) {
+        public DtMap(@NonNull DataType key, @NonNull DataType value) {
             super(String.format(__NAME, key.name(), value.name));
             this.key = key;
             this.value = value;
@@ -342,15 +345,39 @@ public abstract class DataType {
         }
     }
 
+    @Getter
+    @Accessors(fluent = true)
     public static class DtEnum extends DataType {
+        private final Class<?> type;
 
-        protected DtEnum(@NonNull String name) {
-            super(name);
+        protected DtEnum(@NonNull Class<?> type) {
+            super(type.getCanonicalName());
+            this.type = type;
         }
 
         @Override
         public short compareTo(@NonNull DataType target) {
             if (target instanceof DtEnum) {
+                if (name().compareTo(target.name) == 0) {
+                    return 0;
+                }
+            }
+            return RET_INCOMPATIBLE;
+        }
+    }
+    @Getter
+    @Accessors(fluent = true)
+    public static class DtComplex extends DataType {
+        private final Class<?> type;
+
+        public DtComplex(@NonNull Class<?> type) {
+            super(type.getCanonicalName());
+            this.type = type;
+        }
+
+        @Override
+        public short compareTo(@NonNull DataType target) {
+            if (target instanceof DtComplex) {
                 if (name().compareTo(target.name) == 0) {
                     return 0;
                 }
@@ -406,7 +433,51 @@ public abstract class DataType {
     }
 
     public static DataType convert(@NonNull Field field) {
-        
+        Class<?> type = field.getType();
+        DataType dt = convert(type);
+        if (dt != null) {
+            return dt;
+        } else if (Reflector.implementsInterface(List.class, type)) {
+            Class<?> itype = Reflector.getGenericListType(field);
+            DataType idt = convert(itype);
+            if (idt != null) {
+                return new DtCollection(idt);
+            }
+        } else if (Reflector.implementsInterface(Map.class, type)) {
+            Class<?> ktype = Reflector.getGenericMapKeyType(field);
+            DataType kdt = convert(ktype);
+            if (kdt != null) {
+                Class<?> vtype = Reflector.getGenericMapValueType(field);
+                DataType vdt = convert(vtype);
+                if (vdt == null) {
+                    vdt = new DtComplex(vtype);
+                }
+                return new DtMap(kdt, vdt);
+            }
+        }
+        return null;
+    }
+
+    public static DataType convert(@NonNull Class<?> type) {
+        if (type.equals(Boolean.class) || type.equals(boolean.class)) {
+            return BasicDataTypes.Boolean.dataType();
+        } else if (type.equals(Short.class) || type.equals(short.class)) {
+            return BasicDataTypes.Short.dataType();
+        } else if (type.equals(Integer.class) || type.equals(int.class)) {
+            return BasicDataTypes.Integer.dataType();
+        } else if (type.equals(Long.class) || type.equals(long.class)) {
+            return BasicDataTypes.Long.dataType();
+        } else if (type.equals(Float.class) || type.equals(float.class)) {
+            return BasicDataTypes.Float.dataType();
+        } else if (type.equals(Double.class) || type.equals(double.class)) {
+            return BasicDataTypes.Double.dataType();
+        } else if (type.equals(Character.class) || type.equals(char.class)) {
+            return BasicDataTypes.Char.dataType();
+        } else if (type.equals(String.class)) {
+            return BasicDataTypes.String.dataType();
+        } else if (type.isEnum()) {
+            return new DtEnum(type);
+        }
         return null;
     }
 }

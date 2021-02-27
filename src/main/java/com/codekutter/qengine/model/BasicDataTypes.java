@@ -1,7 +1,7 @@
 package com.codekutter.qengine.model;
 
 import com.google.common.base.Preconditions;
-import jdk.internal.joptsimple.internal.Strings;
+import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;

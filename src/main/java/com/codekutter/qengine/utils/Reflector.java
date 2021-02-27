@@ -172,4 +172,16 @@ public class Reflector {
         }
     }
 
+    public static boolean isNumericType(@Nonnull Class<?> type) {
+        if (type.isPrimitive())
+            return true;
+        else return type.equals(Boolean.class) || type.equals(boolean.class) ||
+                type.equals(Short.class) || type.equals(short.class)
+                || type.equals(Integer.class) || type.equals(int.class) ||
+                type.equals(Long.class) || type.equals(long.class)
+                || type.equals(Float.class) || type.equals(float.class) ||
+                type.equals(Double.class) || type.equals(double.class)
+                || type.equals(Character.class) || type.equals(char.class);
+    }
+
 }

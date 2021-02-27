@@ -13,7 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Getter
-@Accessors(fluent = true)
 public class FieldPath {
     @Getter
     @Setter
