@@ -19,6 +19,7 @@ public abstract class Value extends Vertex {
 
     @Setter(AccessLevel.NONE)
     private final ValueType type;
+    private DataType dataType;
 
     public Value(@NonNull ValueType type) {
         this.type = type;

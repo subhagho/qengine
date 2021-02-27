@@ -64,6 +64,18 @@ public class Constant extends Value {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object getEnumValue() throws ParseException {
+        if (Strings.isNullOrEmpty(value)) {
+            throw new ParseException("Value is NULL/Empty.", 0);
+        }
+        if (!(dataType() instanceof DataType.DtEnum)) {
+            throw new ParseException(String.format("Invalid DataType. [type=%s]", dataType().name()), 0);
+        }
+        Class<Enum> et = (Class<Enum>) ((DataType.DtEnum) dataType()).type();
+        return Enum.valueOf(et, value);
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Object getEnumValue(@NonNull Class<?> type) throws ParseException {
         if (Strings.isNullOrEmpty(value)) {
             throw new ParseException("Value is NULL/Empty.", 0);
