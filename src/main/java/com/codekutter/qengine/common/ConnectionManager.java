@@ -17,7 +17,8 @@ public class ConnectionManager {
 
     private Map<String, SessionFactory> hibernateFactory = new HashMap<>();
 
-    private ConnectionManager() {}
+    private ConnectionManager() {
+    }
 
     public ConnectionManager addHibernateSession(@NonNull String name, @NonNull SessionFactory sessionFactory) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
@@ -30,6 +31,15 @@ public class ConnectionManager {
         if (sf != null) {
             LogUtils.debug(getClass(), String.format("Opening new Hibernate session. [name=%s]", name));
             return sf.openSession();
+        }
+        return null;
+    }
+
+    public <T> HibernateDataLoader<T> getHibernateDataLoader(@NonNull String name) {
+        Session session = getHibernateSession(name);
+        if (session != null) {
+            HibernateDataLoader<T> loader = new HibernateDataLoader<>();
+            return (HibernateDataLoader<T>) loader.withConnection(session);
         }
         return null;
     }

@@ -5,15 +5,16 @@ import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
+import org.ehcache.CacheManager;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
-@Accessors(fluent = true)
 public class ReferenceDataManager {
     private Map<String, Collection<?>> maps = new HashMap<>();
+    private Map<String, ExternalDataList> external = new HashMap<>();
+    private CacheManager cacheManager;
 
     private ReferenceDataManager() {
     }
@@ -26,13 +27,17 @@ public class ReferenceDataManager {
     }
 
     public boolean hasReferenceData(@NonNull String key) {
-        return maps.containsKey(key);
+        return maps.containsKey(key) || external.containsKey(key);
     }
 
     @SuppressWarnings("unchecked")
     public <T> Collection<T> get(@NonNull String key) {
         if (hasReferenceData(key)) {
-            return (Collection<T>) maps.get(key);
+            if (maps.containsKey(key)) {
+                return (Collection<T>) maps.get(key);
+            } else if (external.containsKey(key)) {
+                ExternalDataList el = external.get(key);
+            }
         }
         return null;
     }
