@@ -1,6 +1,7 @@
 package com.codekutter.qengine.model;
 
 import com.codekutter.qengine.common.ReferenceDataManager;
+import com.codekutter.qengine.common.StateException;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
@@ -10,7 +11,7 @@ import java.util.Collection;
 
 @Getter
 @Accessors(fluent = true)
-public class ReferenceList extends Value{
+public class ReferenceList extends Value {
     private final String name;
 
     public ReferenceList(@NonNull String name) {
@@ -19,7 +20,7 @@ public class ReferenceList extends Value{
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Collection<T> getReferenceList(@NonNull Class<T> type) throws ClassCastException{
+    public <T> Collection<T> getReferenceList(@NonNull Class<T> type) throws ClassCastException, StateException {
         Preconditions.checkArgument(dataType() != null);
         DataType dt = DataType.convert(type);
         if (dt == null) {

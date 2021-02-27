@@ -2,9 +2,7 @@ package com.codekutter.qengine.common;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import lombok.Getter;
 import lombok.NonNull;
-import lombok.experimental.Accessors;
 import org.ehcache.CacheManager;
 
 import java.util.Collection;
@@ -12,11 +10,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ReferenceDataManager {
+    private ObjectState state = new ObjectState();
     private Map<String, Collection<?>> maps = new HashMap<>();
     private Map<String, ExternalDataList> external = new HashMap<>();
     private CacheManager cacheManager;
 
     private ReferenceDataManager() {
+    }
+
+    private void init() throws ConfigurationException {
+
     }
 
     public ReferenceDataManager put(@NonNull String key, @NonNull Collection<?> values) {
@@ -44,7 +47,14 @@ public class ReferenceDataManager {
 
     public static final ReferenceDataManager __instance = new ReferenceDataManager();
 
-    public static ReferenceDataManager get() {
+    public static void setup() throws ConfigurationException {
+        synchronized (__instance) {
+            if (__instance.state.getState() != EObjectState.Available) __instance.init();
+        }
+    }
+
+    public static ReferenceDataManager get() throws StateException {
+        __instance.state.check(EObjectState.Available, ReferenceDataManager.class);
         return __instance;
     }
 }
