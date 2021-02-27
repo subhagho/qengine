@@ -19,8 +19,6 @@ public class ExternalDataList {
     private String query;
     private Collection<Object> params;
     private boolean cached = true;
-    private long cacheTimeout = 10000 * 60; // Default Cache time out is 10 mins.
-    private long cacheSize = 1000;
 
     public ExternalDataList(@NonNull String name, @NonNull DataType.BasicDataType dataType) {
         this.name = name;

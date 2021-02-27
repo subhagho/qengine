@@ -44,6 +44,14 @@ public class ConnectionManager {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
+    public <C, T> QueryDataLoader<C, T> getDataLoader(@NonNull String name, @NonNull ConnectionTypes connectionType) {
+        if (connectionType == ConnectionTypes.Hibernate) {
+            return (QueryDataLoader<C, T>) getHibernateDataLoader(name);
+        }
+        return null;
+    }
+
     private static final ConnectionManager __instance = new ConnectionManager();
 
     public static ConnectionManager get() {

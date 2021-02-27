@@ -11,10 +11,7 @@ import lombok.experimental.Accessors;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,11 +24,13 @@ public abstract class DataType {
     protected static final int RET_OVERFLOW = 1;
 
     @Setter(AccessLevel.NONE)
-    private String name;
+    private final String name;
+    private final Class<?> type;
 
-    protected DataType(@NonNull String name) {
+    protected DataType(@NonNull String name, @NonNull Class<?> type) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
         this.name = name;
+        this.type = type;
     }
 
     /**
@@ -117,14 +116,14 @@ public abstract class DataType {
     public abstract short compareTo(@NonNull DataType target);
 
     public static abstract class BasicDataType extends DataType {
-        protected BasicDataType(@NonNull String name) {
-            super(name);
+        protected BasicDataType(@NonNull String name, @NonNull Class<?> type) {
+            super(name, type);
         }
     }
 
     public static class DtBoolean extends BasicDataType {
         public DtBoolean() {
-            super("boolean");
+            super("boolean", Boolean.class);
         }
 
         @Override
@@ -140,7 +139,7 @@ public abstract class DataType {
 
     public static class DtShort extends BasicDataType {
         public DtShort() {
-            super("short");
+            super("short", Short.class);
         }
 
         @Override
@@ -158,7 +157,7 @@ public abstract class DataType {
 
     public static class DtInteger extends BasicDataType {
         public DtInteger() {
-            super("integer");
+            super("integer", Integer.class);
         }
 
         @Override
@@ -176,7 +175,7 @@ public abstract class DataType {
 
     public static class DtLong extends BasicDataType {
         public DtLong() {
-            super("long");
+            super("long", Long.class);
         }
 
         @Override
@@ -192,7 +191,7 @@ public abstract class DataType {
 
     public static class DtFloat extends BasicDataType {
         public DtFloat() {
-            super("float");
+            super("float", Float.class);
         }
 
         @Override
@@ -210,7 +209,7 @@ public abstract class DataType {
 
     public static class DtDouble extends BasicDataType {
         public DtDouble() {
-            super("double");
+            super("double", Double.class);
         }
 
         @Override
@@ -226,7 +225,7 @@ public abstract class DataType {
 
     public static class DtChar extends BasicDataType {
         public DtChar() {
-            super("char");
+            super("char", Character.class);
         }
 
         @Override
@@ -240,7 +239,7 @@ public abstract class DataType {
 
     public static class DtString extends BasicDataType {
         public DtString() {
-            super("string");
+            super("string", String.class);
         }
 
         @Override
@@ -254,7 +253,7 @@ public abstract class DataType {
 
     public static class DtDate extends BasicDataType {
         public DtDate() {
-            super("date");
+            super("date", java.sql.Date.class);
         }
 
         @Override
@@ -270,7 +269,7 @@ public abstract class DataType {
 
     public static class DtDateTime extends BasicDataType {
         public DtDateTime() {
-            super("datetime");
+            super("datetime", Date.class);
         }
 
         @Override
@@ -286,7 +285,7 @@ public abstract class DataType {
 
     public static class DtTimestamp extends BasicDataType {
         public DtTimestamp() {
-            super("timestamp");
+            super("timestamp", Timestamp.class);
         }
 
         @Override
@@ -305,7 +304,7 @@ public abstract class DataType {
         private final DataType dataType;
 
         public DtCollection(@NonNull DataType dataType) {
-            super(String.format(__NAME, dataType.name));
+            super(String.format(__NAME, dataType.name), Collection.class);
             this.dataType = dataType;
         }
 
@@ -329,7 +328,7 @@ public abstract class DataType {
         private final DataType value;
 
         public DtMap(@NonNull DataType key, @NonNull DataType value) {
-            super(String.format(__NAME, key.name(), value.name));
+            super(String.format(__NAME, key.name(), value.name), Map.class);
             this.key = key;
             this.value = value;
         }
@@ -353,7 +352,7 @@ public abstract class DataType {
         private final Class<?> type;
 
         protected DtEnum(@NonNull Class<?> type) {
-            super(type.getCanonicalName());
+            super(type.getCanonicalName(), Enum.class);
             this.type = type;
         }
 
@@ -373,7 +372,7 @@ public abstract class DataType {
         private final Class<?> type;
 
         public DtComplex(@NonNull Class<?> type) {
-            super(type.getCanonicalName());
+            super(type.getCanonicalName(), Object.class);
             this.type = type;
         }
 

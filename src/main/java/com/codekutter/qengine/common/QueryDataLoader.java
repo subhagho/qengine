@@ -10,5 +10,5 @@ public interface QueryDataLoader<C, T> extends Closeable {
 
     Collection<T> read(@NonNull String query, @NonNull Class<T> type, Object... params) throws DataStoreException;
 
-    Collection<T> read(@NonNull String query, @NonNull Class<T> type, Collection<Object> params) throws DataStoreException;
+    Collection<T> read(@NonNull String query, @NonNull Class<T> type, Collection<?> params) throws DataStoreException;
 }
