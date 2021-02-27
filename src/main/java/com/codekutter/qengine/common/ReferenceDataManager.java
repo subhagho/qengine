@@ -15,6 +15,9 @@ import java.util.Map;
 public class ReferenceDataManager {
     private Map<String, Collection<?>> maps = new HashMap<>();
 
+    private ReferenceDataManager() {
+    }
+
     public ReferenceDataManager put(@NonNull String key, @NonNull Collection<?> values) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(key));
         maps.put(key, values);

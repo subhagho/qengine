@@ -10,6 +10,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.lang.reflect.Field;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -419,7 +421,7 @@ public abstract class DataType {
         }
         matcher = COLLECTION_PATTERN.matcher(value);
         if (matcher.matches()) {
-            String vt = matcher.group(1);
+            String vt = matcher.group(2);
             if (Strings.isNullOrEmpty(vt)) {
                 throw new IllegalArgumentException(String.format("Collection Inner Type not found: [type string=%s]", value));
             }
@@ -477,6 +479,12 @@ public abstract class DataType {
             return BasicDataTypes.String.dataType();
         } else if (type.isEnum()) {
             return new DtEnum(type);
+        } else if (type.equals(Date.class)) {
+            return BasicDataTypes.DateTime.dataType();
+        } else if (type.equals(java.sql.Date.class)) {
+            return BasicDataTypes.Date.dataType();
+        } else if (type.equals(Timestamp.class)) {
+            return BasicDataTypes.Timestamp.dataType();
         }
         return null;
     }
