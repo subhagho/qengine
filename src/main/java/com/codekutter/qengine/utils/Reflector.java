@@ -1,5 +1,6 @@
 package com.codekutter.qengine.utils;
 
+import com.codekutter.qengine.model.FieldPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.StringUtils;
@@ -187,23 +188,125 @@ public class Reflector {
                 || type.equals(Character.class) || type.equals(char.class);
     }
 
+    /**
+     * Check if the specified type is a primitive or primitive type class.
+     *
+     * @param type - Field to check primitive for.
+     * @return - Is primitive?
+     */
+    public static boolean isPrimitiveTypeOrClass(@Nonnull Class<?> type) {
+        if (isNumericType(type)) return true;
+        return type.equals(Class.class);
+    }
+
+    /**
+     * Check if the specified type is a primitive or primitive type class or String.
+     *
+     * @param type - Field to check primitive/String for.
+     * @return - Is primitive or String?
+     */
+    public static boolean isPrimitiveTypeOrString(@Nonnull Class<?> type) {
+        if (isPrimitiveTypeOrClass(type)) {
+            return true;
+        }
+        if (type == String.class) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Get the parsed value of the type specified from the
+     * string value passed.
+     *
+     * @param type  - Required value type
+     * @param value - Input String value
+     * @return - Parsed Value.
+     */
+    @SuppressWarnings("unchecked")
+    public static Object parseStringValue(Class<?> type, String value) {
+        if (!Strings.isNullOrEmpty(value)) {
+            if (isPrimitiveTypeOrString(type)) {
+                return parsePrimitiveValue(type, value);
+            } else if (type.isEnum()) {
+                Class<Enum> et = (Class<Enum>) type;
+                return Enum.valueOf(et, value);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get the value of the primitive type parsed from the string value.
+     *
+     * @param type  - Primitive Type
+     * @param value - String value
+     * @return - Parsed Value
+     */
+    private static Object parsePrimitiveValue(Class<?> type, String value) {
+        if (type.equals(Boolean.class) || type.equals(boolean.class)) {
+            return Boolean.parseBoolean(value);
+        } else if (type.equals(Short.class) || type.equals(short.class)) {
+            return Short.parseShort(value);
+        } else if (type.equals(Integer.class) || type.equals(int.class)) {
+            return Integer.parseInt(value);
+        } else if (type.equals(Long.class) || type.equals(long.class)) {
+            return Long.parseLong(value);
+        } else if (type.equals(Float.class) || type.equals(float.class)) {
+            return Float.parseFloat(value);
+        } else if (type.equals(Double.class) || type.equals(double.class)) {
+            return Double.parseDouble(value);
+        } else if (type.equals(Character.class) || type.equals(char.class)) {
+            return value.charAt(0);
+        } else if (type.equals(Byte.class) || type.equals(byte.class)) {
+            return Byte.parseByte(value);
+        } else if (type.equals(String.class)) {
+            return value;
+        }
+        return null;
+    }
+
     public static Object getNestedFieldValue(@Nonnull Object source,
-                                             @Nonnull String name) throws Exception {
-        String[] parts = name.split("\\.");
+                                             @Nonnull FieldPath path) throws Exception {
+        Preconditions.checkArgument(path.getNodes() != null);
         Object value = source;
         Class<?> type = source.getClass();
         int index = 0;
-        while (index < parts.length) {
-            Field field = findField(type, parts[index]);
+        FieldPath.PathNode[] nodes = path.getNodes();
+        while (index < nodes.length) {
+            Field field = findField(type, nodes[index].name());
             if (field == null) {
                 throw new Exception(String.format("Field not found. [type=%s][field=%s]",
-                        type.getCanonicalName(), parts[index]));
+                        type.getCanonicalName(), nodes[index].name()));
             }
+
             value = getFieldValue(value, field);
+            if (nodes[index] instanceof FieldPath.CollectionPathNode) {
+                FieldPath.CollectionPathNode node = (FieldPath.CollectionPathNode) nodes[index];
+                int ii = Integer.parseInt(node.key());
+                if (implementsInterface(List.class, field.getType())) {
+                    List vl = (List) value;
+                    value = vl.get(ii);
+                } else if (implementsInterface(Set.class, field.getType())) {
+                    Set vl = (Set) value;
+                    Object[] arr = vl.toArray();
+                    value = arr[ii];
+                } else if (implementsInterface(Map.class, field.getType())) {
+                    Map map = (Map) value;
+                    Class<?> kt = getGenericMapKeyType(field);
+                    Object kv = parseStringValue(kt, node.key());
+                    if (kv == null) {
+                        break;
+                    }
+                    value = map.get(kv);
+                }
+                type = value.getClass();
+            } else {
+                type = field.getType();
+            }
             if (value == null) {
                 break;
             }
-            type = field.getType();
             index++;
         }
         return value;

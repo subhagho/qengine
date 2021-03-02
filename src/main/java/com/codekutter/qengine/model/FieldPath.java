@@ -31,7 +31,7 @@ public class FieldPath {
     }
 
 
-    private static final String PARAM_REGEX = "(\\w+)\\[\\s*(\\w+)\\s*\\]";
+    private static final String PARAM_REGEX = "(\\w+)\\[\\s*(\\S+)\\s*\\]";
     private static final Pattern PARAM_PATTERN = Pattern.compile(PARAM_REGEX);
 
     private String path;
