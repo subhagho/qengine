@@ -9,10 +9,9 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Reflector {
 
@@ -41,6 +40,8 @@ public class Reflector {
                     ct = getGenericListType(f);
                 } else if (implementsInterface(Set.class, ct)) {
                     ct = getGenericSetType(f);
+                } else if (implementsInterface(Map.class, ct)) {
+                    ct = getGenericMapValueType(f);
                 }
                 indx++;
             }
@@ -283,11 +284,12 @@ public class Reflector {
             value = getFieldValue(value, field);
             if (nodes[index] instanceof FieldPath.CollectionPathNode) {
                 FieldPath.CollectionPathNode node = (FieldPath.CollectionPathNode) nodes[index];
-                int ii = Integer.parseInt(node.key());
                 if (implementsInterface(List.class, field.getType())) {
+                    int ii = Integer.parseInt(node.key());
                     List vl = (List) value;
                     value = vl.get(ii);
                 } else if (implementsInterface(Set.class, field.getType())) {
+                    int ii = Integer.parseInt(node.key());
                     Set vl = (Set) value;
                     Object[] arr = vl.toArray();
                     value = arr[ii];
@@ -313,6 +315,20 @@ public class Reflector {
     }
 
 
+    public static Method getSetter(Class<?> type, Field f) {
+        Preconditions.checkArgument(f != null);
+
+        String method = "set" + StringUtils.capitalize(f.getName());
+        Method m = MethodUtils.getAccessibleMethod(type, method,
+                f.getType());
+        if (m == null) {
+            method = f.getName();
+            m = MethodUtils.getAccessibleMethod(type, method,
+                    f.getType());
+        }
+        return m;
+    }
+
     /**
      * Get the value of the specified field from the object passed.
      * This assumes standard bean Getters/Setters.
@@ -331,22 +347,7 @@ public class Reflector {
         Preconditions.checkArgument(o != null);
         Preconditions.checkArgument(field != null);
 
-        String method = "get" + StringUtils.capitalize(field.getName());
-
-        Method m = MethodUtils.getAccessibleMethod(o.getClass(), method);
-        if (m == null) {
-            method = field.getName();
-            m = MethodUtils.getAccessibleMethod(o.getClass(), method);
-        }
-
-        if (m == null) {
-            Class<?> type = field.getType();
-            if (type.equals(boolean.class) || type.equals(Boolean.class)) {
-                method = "is" + StringUtils.capitalize(field.getName());
-                m = MethodUtils.getAccessibleMethod(o.getClass(), method);
-            }
-        }
-
+        Method m = getAccessor(o.getClass(), field);
         if (m == null)
             if (!ignore)
                 throw new Exception("No accessable method found for field. [field="
@@ -354,7 +355,121 @@ public class Reflector {
                         + o.getClass().getCanonicalName() + "]");
             else return null;
 
-        return MethodUtils.invokeMethod(o, method);
+        return MethodUtils.invokeMethod(o, m.getName());
+    }
+
+
+    public static Method getAccessor(Class<?> type, Field field) {
+        Preconditions.checkArgument(field != null);
+
+        String method = "get" + StringUtils.capitalize(field.getName());
+
+        Method m = MethodUtils.getAccessibleMethod(type, method);
+        if (m == null) {
+            method = field.getName();
+            m = MethodUtils.getAccessibleMethod(type, method);
+        }
+
+        if (m == null) {
+            Class<?> t = field.getType();
+            if (t.equals(boolean.class) || t.equals(Boolean.class)) {
+                method = "is" + StringUtils.capitalize(field.getName());
+                m = MethodUtils.getAccessibleMethod(type, method);
+            }
+        }
+        return m;
+    }
+
+    /**
+     * Recursively get all the public methods declared for a type.
+     *
+     * @param type - Type to fetch fields for.
+     * @return - Array of all defined methods.
+     */
+    public static Method[] getAllMethods(@Nonnull Class<?> type) {
+        Preconditions.checkArgument(type != null);
+        List<Method> methods = new ArrayList<>();
+        getMethods(type, methods);
+        if (!methods.isEmpty()) {
+            Method[] ma = new Method[methods.size()];
+            for (int ii = 0; ii < methods.size(); ii++) {
+                ma[ii] = methods.get(ii);
+            }
+            return ma;
+        }
+        return null;
+    }
+
+    /**
+     * Get all public methods declared for this type and add them to the list passed.
+     *
+     * @param type    - Type to get methods for.
+     * @param methods - List of methods.
+     */
+    private static void getMethods(Class<?> type, List<Method> methods) {
+        Method[] ms = type.getDeclaredMethods();
+        if (ms != null && ms.length > 0) {
+            for (Method m : ms) {
+                if (m != null && Modifier.isPublic(m.getModifiers()))
+                    methods.add(m);
+            }
+        }
+        Class<?> st = type.getSuperclass();
+        if (st != null && !st.equals(Object.class)) {
+            getMethods(st, methods);
+        }
+    }
+
+    /**
+     * Recursively get all the declared fields for a type.
+     *
+     * @param type - Type to fetch fields for.
+     * @return - Array of all defined fields.
+     */
+    public static Field[] getAllFields(@Nonnull Class<?> type) {
+        Preconditions.checkArgument(type != null);
+        List<Field> fields = new ArrayList<>();
+        getFields(type, fields);
+        if (!fields.isEmpty()) {
+            Field[] fa = new Field[fields.size()];
+            for (int ii = 0; ii < fields.size(); ii++) {
+                fa[ii] = fields.get(ii);
+            }
+            return fa;
+        }
+        return null;
+    }
+
+    public static Map<String, Field> getFieldsMap(@Nonnull Class<?> type) {
+        Field[] fields = getAllFields(type);
+        if (fields != null && fields.length > 0) {
+            Map<String, Field> map = new HashMap<>();
+            for (Field field : fields) {
+                map.put(field.getName(), field);
+            }
+            return map;
+        }
+        return null;
+    }
+
+    /**
+     * Get fields declared for this type and add them to the list passed.
+     *
+     * @param type   - Type to get fields for.
+     * @param fields - List of fields.
+     */
+    private static void getFields(Class<?> type, List<Field> fields) {
+        Field[] fs = type.getDeclaredFields();
+        if (fs != null && fs.length > 0) {
+            for (Field f : fs) {
+                if (f != null)
+                    fields.add(f);
+            }
+        }
+        Class<?> st = type.getSuperclass();
+        if (st != null && !st.equals(Object.class)) {
+            getFields(st, fields);
+        }
     }
 
 }

@@ -61,6 +61,30 @@ public class FieldPath {
         return this;
     }
 
+    public FieldPath withPath(@NonNull String path, @NonNull ClassIndex<?> index) throws IllegalArgumentException {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(path));
+        String[] parts = path.split("/");
+        nodes = new PathNode[parts.length];
+        String journey = null;
+        for (int ii = 0; ii < parts.length; ii++) {
+            PathNode pn = parse(parts[ii]);
+            pn.sequence = ii;
+            if (ii == 0) {
+                journey = pn.name;
+            } else {
+                journey = String.format("%s/%s", journey, pn.name);
+            }
+            ClassIndex.IndexedField fd = index.find(journey);
+            if (fd == null) {
+                throw new IllegalArgumentException(String.format("Error resolving field. [type=%s][path=%s]", index.type().getCanonicalName(), journey));
+            }
+            pn.field = fd.field();
+            nodes[ii] = pn;
+        }
+        this.path = path;
+        return this;
+    }
+
     private PathNode parse(String name) throws IllegalArgumentException {
         name = name.trim();
         Matcher matcher = PARAM_PATTERN.matcher(name);
