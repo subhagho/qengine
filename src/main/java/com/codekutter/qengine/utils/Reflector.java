@@ -26,8 +26,8 @@ public class Reflector {
      * @param name - Field name.
      * @return - Found Field or NULL
      */
-    public static Field findField(@Nonnull Class<?> type,
-                                  @Nonnull String name) {
+    public static Field findField(@NonNull Class<?> type,
+                                  @NonNull String name) {
         Preconditions.checkArgument(type != null);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
 
@@ -74,7 +74,7 @@ public class Reflector {
      * @param field - Field to extract the Parameterized type for.
      * @return - Parameterized type.
      */
-    public static Class<?> getGenericListType(@Nonnull Field field) {
+    public static Class<?> getGenericListType(@NonNull Field field) {
         Preconditions.checkArgument(field != null);
         Preconditions
                 .checkArgument(implementsInterface(List.class, field.getType()));
@@ -89,7 +89,7 @@ public class Reflector {
      * @param field - Field to extract the Parameterized type for.
      * @return - Parameterized type.
      */
-    public static Class<?> getGenericSetType(@Nonnull Field field) {
+    public static Class<?> getGenericSetType(@NonNull Field field) {
         Preconditions.checkArgument(field != null);
         Preconditions
                 .checkArgument(implementsInterface(Set.class, field.getType()));
@@ -105,8 +105,8 @@ public class Reflector {
      * @param type - Type implementing expected interface.
      * @return - Implements Interface?
      */
-    public static boolean implementsInterface(@Nonnull Class<?> intf,
-                                              @Nonnull Class<?> type) {
+    public static boolean implementsInterface(@NonNull Class<?> intf,
+                                              @NonNull Class<?> type) {
         Preconditions.checkArgument(intf != null);
         Preconditions.checkArgument(type != null);
 
@@ -134,7 +134,7 @@ public class Reflector {
      * @param field - Field to extract the Parameterized type for.
      * @return - Parameterized type.
      */
-    public static Class<?> getGenericMapKeyType(@Nonnull Field field) {
+    public static Class<?> getGenericMapKeyType(@NonNull Field field) {
         Preconditions
                 .checkArgument(implementsInterface(Map.class, field.getType()));
 
@@ -148,7 +148,7 @@ public class Reflector {
      * @param field - Field to extract the Parameterized type for.
      * @return - Parameterized type.
      */
-    public static Class<?> getGenericMapValueType(@Nonnull Field field) {
+    public static Class<?> getGenericMapValueType(@NonNull Field field) {
         Preconditions
                 .checkArgument(implementsInterface(Map.class, field.getType()));
 
@@ -164,8 +164,8 @@ public class Reflector {
      * @param type   - Inherited type
      * @return - Is Ancestor type?
      */
-    public static boolean isSuperType(@Nonnull Class<?> parent,
-                                      @Nonnull Class<?> type) {
+    public static boolean isSuperType(@NonNull Class<?> parent,
+                                      @NonNull Class<?> type) {
         Preconditions.checkArgument(parent != null);
         Preconditions.checkArgument(type != null);
         if (parent.equals(type)) {
@@ -181,7 +181,7 @@ public class Reflector {
         }
     }
 
-    public static boolean isNumericType(@Nonnull Class<?> type) {
+    public static boolean isNumericType(@NonNull Class<?> type) {
         if (type.isPrimitive())
             return true;
         else return type.equals(Boolean.class) || type.equals(boolean.class) ||
@@ -199,7 +199,7 @@ public class Reflector {
      * @param type - Field to check primitive for.
      * @return - Is primitive?
      */
-    public static boolean isPrimitiveTypeOrClass(@Nonnull Class<?> type) {
+    public static boolean isPrimitiveTypeOrClass(@NonNull Class<?> type) {
         if (isNumericType(type)) return true;
         return type.equals(Class.class);
     }
@@ -210,7 +210,7 @@ public class Reflector {
      * @param type - Field to check primitive/String for.
      * @return - Is primitive or String?
      */
-    public static boolean isPrimitiveTypeOrString(@Nonnull Class<?> type) {
+    public static boolean isPrimitiveTypeOrString(@NonNull Class<?> type) {
         if (isPrimitiveTypeOrClass(type)) {
             return true;
         }
@@ -228,7 +228,7 @@ public class Reflector {
      * @param value - Input String value
      * @return - Parsed Value.
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> T parseValue(Class<T> type, String value) throws ParseException {
         if (!Strings.isNullOrEmpty(value)) {
             if (isPrimitiveTypeOrString(type)) {
@@ -280,7 +280,7 @@ public class Reflector {
         return String.valueOf(value).charAt(0);
     }
 
-    public static Object getEnumValue(@NonNull Object value, @Nonnull Class<?> enumType) {
+    public static Object getEnumValue(@NonNull Object value, @NonNull Class<?> enumType) {
         Class<?> type = value.getClass();
         if (type.isEnum()) {
             if (type.equals(enumType)) {
@@ -290,7 +290,7 @@ public class Reflector {
         return null;
     }
 
-    public static Object getDateTimeValue(@Nonnull Object value) {
+    public static Object getDateTimeValue(@NonNull Object value) {
         if (value instanceof Date) return value;
         else if (value instanceof Long) {
             return new Date((long) value);
@@ -307,7 +307,7 @@ public class Reflector {
         return null;
     }
 
-    public static Object getTimestampValue(@Nonnull Object value) {
+    public static Object getTimestampValue(@NonNull Object value) {
         if (value instanceof Timestamp) return value;
         else if (value instanceof Long) {
             return new Timestamp((long) value);
@@ -379,8 +379,9 @@ public class Reflector {
         return null;
     }
 
-    public static Object getNestedFieldValue(@Nonnull Object source,
-                                             @Nonnull FieldPath path) throws Exception {
+    @SuppressWarnings("rawtypes")
+    public static Object getNestedFieldValue(@NonNull Object source,
+                                             @NonNull FieldPath path) throws Exception {
         Preconditions.checkArgument(path.getNodes() != null);
         Object value = source;
         Class<?> type = source.getClass();
@@ -436,11 +437,11 @@ public class Reflector {
      * @return - Field value.
      * @throws Exception
      */
-    public static Object getFieldValue(@Nonnull Object o, @Nonnull Field field) throws Exception {
+    public static Object getFieldValue(@NonNull Object o, @NonNull Field field) throws Exception {
         return getFieldValue(o, field, false);
     }
 
-    public static Object getFieldValue(@Nonnull Object o, @Nonnull Field field, boolean ignore)
+    public static Object getFieldValue(@NonNull Object o, @NonNull Field field, boolean ignore)
             throws Exception {
         Preconditions.checkArgument(o != null);
         Preconditions.checkArgument(field != null);
@@ -484,7 +485,7 @@ public class Reflector {
      * @param type - Type to fetch fields for.
      * @return - Array of all defined methods.
      */
-    public static Method[] getAllMethods(@Nonnull Class<?> type) {
+    public static Method[] getAllMethods(@NonNull Class<?> type) {
         Preconditions.checkArgument(type != null);
         List<Method> methods = new ArrayList<>();
         getMethods(type, methods);
@@ -524,7 +525,7 @@ public class Reflector {
      * @param type - Type to fetch fields for.
      * @return - Array of all defined fields.
      */
-    public static Field[] getAllFields(@Nonnull Class<?> type) {
+    public static Field[] getAllFields(@NonNull Class<?> type) {
         Preconditions.checkArgument(type != null);
         List<Field> fields = new ArrayList<>();
         getFields(type, fields);
@@ -538,7 +539,7 @@ public class Reflector {
         return null;
     }
 
-    public static Map<String, Field> getFieldsMap(@Nonnull Class<?> type) {
+    public static Map<String, Field> getFieldsMap(@NonNull Class<?> type) {
         Field[] fields = getAllFields(type);
         if (fields != null && fields.length > 0) {
             Map<String, Field> map = new HashMap<>();

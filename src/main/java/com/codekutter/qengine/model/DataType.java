@@ -614,10 +614,10 @@ public abstract class DataType {
 
     @Getter
     @Accessors(fluent = true)
-    public static class DtEnum extends BasicDataType<Enum<?>> {
-        private final Class<?> type;
+    public static class DtEnum<T extends Enum<T>> extends BasicDataType<Enum<T>> {
+        private final Class<T> type;
 
-        protected DtEnum(@NonNull Class<?> type) {
+        protected DtEnum(@NonNull Class<T> type) {
             super(type.getCanonicalName(), Enum.class);
             this.type = type;
         }
@@ -633,9 +633,9 @@ public abstract class DataType {
         }
 
         @Override
-        public Enum<?> fromString(@NonNull String value) throws ParseException {
+        public Enum<T> fromString(@NonNull String value) throws ParseException {
             if (!Strings.isNullOrEmpty(value)) {
-                return (Enum<?>) Reflector.parseValue(type, value);
+                return Reflector.parseValue(type, value);
             }
             return null;
         }
@@ -645,11 +645,11 @@ public abstract class DataType {
             if (source != null && target != null) {
                 Preconditions.checkArgument(source.getClass().equals(target.getClass()));
             }
-            Enum<?> sv = (Enum<?>) Reflector.parseValue(type, source);
+            Enum<T> sv = Reflector.parseValue(type, source);
             if (source != null && sv == null) {
                 throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
             }
-            Enum<?> tv = (Enum<?>) Reflector.parseValue(type, target);
+            Enum<T> tv = Reflector.parseValue(type, target);
             if (target != null && tv == null) {
                 throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
             }

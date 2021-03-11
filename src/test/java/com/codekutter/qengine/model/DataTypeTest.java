@@ -83,7 +83,7 @@ class DataTypeTest {
     @Test
     void compareValue() {
         try {
-            DataType.DtEnum dt = new DataType.DtEnum(TestEnum.class);
+            DataType.DtEnum<TestEnum> dt = new DataType.DtEnum<>(TestEnum.class);
             int ret = dt.compareValue(TestEnum.ONE, TestEnum.THREE);
             assertTrue(ret < 0);
             ret = dt.compareValue(TestEnum.TWO, TestEnum.TWO);
