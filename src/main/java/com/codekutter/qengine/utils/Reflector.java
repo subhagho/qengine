@@ -3,6 +3,7 @@ package com.codekutter.qengine.utils;
 import com.codekutter.qengine.model.FieldPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
@@ -11,6 +12,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Reflector {
@@ -225,13 +229,121 @@ public class Reflector {
      * @return - Parsed Value.
      */
     @SuppressWarnings("unchecked")
-    public static Object parseStringValue(Class<?> type, String value) {
+    public static <T> T parseValue(Class<T> type, String value) throws ParseException {
         if (!Strings.isNullOrEmpty(value)) {
             if (isPrimitiveTypeOrString(type)) {
-                return parsePrimitiveValue(type, value);
+                return (T) parsePrimitiveValue(type, value);
             } else if (type.isEnum()) {
                 Class<Enum> et = (Class<Enum>) type;
-                return Enum.valueOf(et, value);
+                return (T) Enum.valueOf(et, value);
+            } else if (type.equals(Date.class)) {
+                SimpleDateFormat format = new SimpleDateFormat();
+                return (T) format.parse(value);
+            } else if (type.equals(java.sql.Date.class)) {
+                SimpleDateFormat format = new SimpleDateFormat();
+                Date dt = format.parse(value);
+                return (T) new java.sql.Date(dt.getTime());
+            } else if (type.equals(Timestamp.class)) {
+                return (T) Timestamp.valueOf(value);
+            }
+        }
+        return null;
+    }
+
+    public static Object getBooleanValue(@NonNull Object value) {
+        if (value instanceof Boolean) {
+            return (boolean) value;
+        } else if (value instanceof Short) {
+            return ((Short) value != 0);
+        } else if (value instanceof Integer) {
+            return ((Integer) value != 0);
+        } else if (value instanceof Long) {
+            return ((Long) value != 0);
+        } else if (value instanceof Float) {
+            return ((Float) value != 0);
+        } else if (value instanceof Double) {
+            return ((Double) value != 0);
+        }
+        return false;
+    }
+
+    public static Object getNumericValue(@NonNull Object value) {
+        if (value instanceof Boolean) {
+            return ((Boolean) value ? 1 : 0);
+        } else if (value instanceof Short || value instanceof Integer || value instanceof Long || value instanceof Float || value instanceof Double) {
+            return value;
+        }
+        return null;
+    }
+
+    private static Object getCharValue(@NonNull Object value) {
+        return String.valueOf(value).charAt(0);
+    }
+
+    public static Object getEnumValue(@NonNull Object value, @Nonnull Class<?> enumType) {
+        Class<?> type = value.getClass();
+        if (type.isEnum()) {
+            if (type.equals(enumType)) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    public static Object getDateTimeValue(@Nonnull Object value) {
+        if (value instanceof Date) return value;
+        else if (value instanceof Long) {
+            return new Date((long) value);
+        }
+        return null;
+    }
+
+    public static Object getDateValue(@NonNull Object value) {
+        if (value instanceof java.sql.Date) return value;
+        else if (value instanceof Long) {
+            Date dt = new Date((long) value);
+            return new java.sql.Date(dt.getTime());
+        }
+        return null;
+    }
+
+    public static Object getTimestampValue(@Nonnull Object value) {
+        if (value instanceof Timestamp) return value;
+        else if (value instanceof Long) {
+            return new Timestamp((long) value);
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T> T parseValue(Class<T> type, Object value) throws ParseException {
+        if (value != null) {
+            if (value instanceof String) {
+                return parseValue(type, (String) value);
+            } else {
+                if (type.equals(Boolean.class) || type.equals(boolean.class)) {
+                    return (T) getBooleanValue(value);
+                } else if (type.equals(Short.class) || type.equals(short.class)) {
+                    return (T) getNumericValue(value);
+                } else if (type.equals(Integer.class) || type.equals(int.class)) {
+                    return (T) getNumericValue(value);
+                } else if (type.equals(Long.class) || type.equals(long.class)) {
+                    return (T) getNumericValue(value);
+                } else if (type.equals(Float.class) || type.equals(float.class)) {
+                    return (T) getNumericValue(value);
+                } else if (type.equals(Double.class) || type.equals(double.class)) {
+                    return (T) getNumericValue(value);
+                } else if (type.equals(Character.class) || type.equals(char.class)) {
+                    return (T) getCharValue(value);
+                } else if (type.isEnum()) {
+                    return (T) getEnumValue(value, type);
+                } else if (type.equals(Date.class)) {
+                    return (T) getDateTimeValue(value);
+                } else if (type.equals(java.sql.Date.class)) {
+                    return (T) getDateValue(value);
+                } else if (type.equals(Timestamp.class)) {
+                    return (T) getTimestampValue(value);
+                }
             }
         }
         return null;
@@ -244,7 +356,7 @@ public class Reflector {
      * @param value - String value
      * @return - Parsed Value
      */
-    private static Object parsePrimitiveValue(Class<?> type, String value) {
+    private static <T> Object parsePrimitiveValue(Class<T> type, String value) {
         if (type.equals(Boolean.class) || type.equals(boolean.class)) {
             return Boolean.parseBoolean(value);
         } else if (type.equals(Short.class) || type.equals(short.class)) {
@@ -296,7 +408,7 @@ public class Reflector {
                 } else if (implementsInterface(Map.class, field.getType())) {
                     Map map = (Map) value;
                     Class<?> kt = getGenericMapKeyType(field);
-                    Object kv = parseStringValue(kt, node.key());
+                    Object kv = parseValue(kt, node.key());
                     if (kv == null) {
                         break;
                     }

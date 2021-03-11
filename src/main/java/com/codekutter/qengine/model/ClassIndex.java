@@ -14,6 +14,7 @@ import org.apache.commons.lang3.reflect.MethodUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -134,13 +135,13 @@ public class ClassIndex<T> {
         return buffer.toString();
     }
 
-    public Object getFieldValue(@NonNull Object source, @NonNull FieldPath path) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public Object getFieldValue(@NonNull Object source, @NonNull FieldPath path) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ParseException {
         Preconditions.checkArgument(index.size() > 0);
         Preconditions.checkArgument(Reflector.isSuperType(type, source.getClass()));
         return getFieldValue(source, path, 0, null);
     }
 
-    private Object getFieldValue(Object source, FieldPath path, int idx, String journey) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    private Object getFieldValue(Object source, FieldPath path, int idx, String journey) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ParseException {
         String p = journey;
         FieldPath.PathNode pn = path.getNodes()[idx];
         if (Strings.isNullOrEmpty(p)) {
@@ -186,7 +187,7 @@ public class ClassIndex<T> {
                 Preconditions.checkState(!Strings.isNullOrEmpty(sii));
                 Map<?, ?> map = (Map<?, ?>) value;
                 Class<?> kt = Reflector.getGenericMapKeyType(ff.field);
-                Object key = Reflector.parseStringValue(kt, sii);
+                Object key = Reflector.parseValue(kt, sii);
                 value = map.get(key);
             }
             return getFieldValue(value, path, idx + 1, p);

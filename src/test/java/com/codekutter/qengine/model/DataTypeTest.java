@@ -79,4 +79,18 @@ class DataTypeTest {
             fail(t);
         }
     }
+
+    @Test
+    void compareValue() {
+        try {
+            DataType.DtEnum dt = new DataType.DtEnum(TestEnum.class);
+            int ret = dt.compareValue(TestEnum.ONE, TestEnum.THREE);
+            assertTrue(ret < 0);
+            ret = dt.compareValue(TestEnum.TWO, TestEnum.TWO);
+            assertEquals(0, ret);
+        } catch (Throwable t) {
+            LogUtils.error(getClass(), t);
+            fail(t);
+        }
+    }
 }

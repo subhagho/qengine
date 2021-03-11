@@ -11,6 +11,8 @@ import lombok.experimental.Accessors;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -115,13 +117,18 @@ public abstract class DataType {
 
     public abstract short compareTo(@NonNull DataType target);
 
-    public static abstract class BasicDataType extends DataType {
+    public static abstract class BasicDataType<T> extends DataType {
         protected BasicDataType(@NonNull String name, @NonNull Class<?> type) {
             super(name, type);
         }
+
+        public abstract T fromString(@NonNull String value) throws ParseException;
+
+        public abstract int compareValue(Object source, Object target) throws ParseException;
+
     }
 
-    public static class DtBoolean extends BasicDataType {
+    public static class DtBoolean extends BasicDataType<Boolean> {
         public DtBoolean() {
             super("boolean", Boolean.class);
         }
@@ -135,9 +142,36 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Boolean fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Boolean.parseBoolean(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Boolean sv = Reflector.parseValue(Boolean.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Boolean tv = Reflector.parseValue(Boolean.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            int rv = -1;
+            if (sv == tv) {
+                rv = 0;
+            } else {
+                rv = (sv == null || !sv ? -1 : 1);
+            }
+            return rv;
+        }
     }
 
-    public static class DtShort extends BasicDataType {
+    public static class DtShort extends BasicDataType<Short> {
         public DtShort() {
             super("short", Short.class);
         }
@@ -153,9 +187,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Short fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Short.parseShort(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Short sv = Reflector.parseValue(Short.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Short tv = Reflector.parseValue(Short.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return sv - tv;
+        }
     }
 
-    public static class DtInteger extends BasicDataType {
+    public static class DtInteger extends BasicDataType<Integer> {
         public DtInteger() {
             super("integer", Integer.class);
         }
@@ -171,9 +228,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Integer fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Integer.parseInt(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Integer sv = Reflector.parseValue(Integer.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Integer tv = Reflector.parseValue(Integer.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return sv - tv;
+        }
     }
 
-    public static class DtLong extends BasicDataType {
+    public static class DtLong extends BasicDataType<Long> {
         public DtLong() {
             super("long", Long.class);
         }
@@ -187,9 +267,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Long fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Long.parseLong(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Long sv = Reflector.parseValue(Long.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Long tv = Reflector.parseValue(Long.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return (int) (sv - tv);
+        }
     }
 
-    public static class DtFloat extends BasicDataType {
+    public static class DtFloat extends BasicDataType<Float> {
         public DtFloat() {
             super("float", Float.class);
         }
@@ -205,9 +308,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Float fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Float.parseFloat(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Float sv = Reflector.parseValue(Float.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Float tv = Reflector.parseValue(Float.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return (int) (sv - tv);
+        }
     }
 
-    public static class DtDouble extends BasicDataType {
+    public static class DtDouble extends BasicDataType<Double> {
         public DtDouble() {
             super("double", Double.class);
         }
@@ -221,9 +347,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Double fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Double.parseDouble(value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Double sv = Reflector.parseValue(Double.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Double tv = Reflector.parseValue(Double.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return (int) (sv - tv);
+        }
     }
 
-    public static class DtChar extends BasicDataType {
+    public static class DtChar extends BasicDataType<Character> {
         public DtChar() {
             super("char", Character.class);
         }
@@ -235,9 +384,32 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Character fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return value.charAt(0);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Character sv = Reflector.parseValue(Character.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Character tv = Reflector.parseValue(Character.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? 0 : sv);
+            tv = (tv == null ? 0 : tv);
+            return (sv - tv);
+        }
     }
 
-    public static class DtString extends BasicDataType {
+    public static class DtString extends BasicDataType<String> {
         public DtString() {
             super("string", String.class);
         }
@@ -249,9 +421,29 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public String fromString(@NonNull String value) throws ParseException {
+            return value;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            String sv = Reflector.parseValue(String.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            String tv = Reflector.parseValue(String.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? "" : sv);
+            tv = (tv == null ? "" : tv);
+            return sv.compareTo(tv);
+        }
     }
 
-    public static class DtDate extends BasicDataType {
+    public static class DtDate extends BasicDataType<java.sql.Date> {
         public DtDate() {
             super("date", java.sql.Date.class);
         }
@@ -265,9 +457,34 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public java.sql.Date fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                SimpleDateFormat format = new SimpleDateFormat();
+                Date parsed = format.parse(value);
+                return new java.sql.Date(parsed.getTime());
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            java.sql.Date sv = Reflector.parseValue(java.sql.Date.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            java.sql.Date tv = Reflector.parseValue(java.sql.Date.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? new java.sql.Date(0) : sv);
+            tv = (tv == null ? new java.sql.Date(0) : tv);
+            return sv.compareTo(tv);
+        }
     }
 
-    public static class DtDateTime extends BasicDataType {
+    public static class DtDateTime extends BasicDataType<Date> {
         public DtDateTime() {
             super("datetime", Date.class);
         }
@@ -281,9 +498,34 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Date fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                SimpleDateFormat format = new SimpleDateFormat();
+                return format.parse(value);
+            }
+            return null;
+        }
+
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Date sv = Reflector.parseValue(Date.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Date tv = Reflector.parseValue(Date.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? new Date(0) : sv);
+            tv = (tv == null ? new Date(0) : tv);
+            return sv.compareTo(tv);
+        }
     }
 
-    public static class DtTimestamp extends BasicDataType {
+    public static class DtTimestamp extends BasicDataType<Timestamp> {
         public DtTimestamp() {
             super("timestamp", Timestamp.class);
         }
@@ -294,6 +536,30 @@ public abstract class DataType {
                 return 0;
             }
             return RET_INCOMPATIBLE;
+        }
+
+        @Override
+        public Timestamp fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return Timestamp.valueOf(value);
+            }
+            return null;
+        }
+
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            Timestamp sv = Reflector.parseValue(Timestamp.class, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Timestamp tv = Reflector.parseValue(Timestamp.class, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+            sv = (sv == null ? new Timestamp(0) : sv);
+            tv = (tv == null ? new Timestamp(0) : tv);
+            return sv.compareTo(tv);
         }
     }
 
@@ -348,7 +614,7 @@ public abstract class DataType {
 
     @Getter
     @Accessors(fluent = true)
-    public static class DtEnum extends DataType {
+    public static class DtEnum extends BasicDataType<Enum<?>> {
         private final Class<?> type;
 
         protected DtEnum(@NonNull Class<?> type) {
@@ -365,7 +631,35 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
+
+        @Override
+        public Enum<?> fromString(@NonNull String value) throws ParseException {
+            if (!Strings.isNullOrEmpty(value)) {
+                return (Enum<?>) Reflector.parseValue(type, value);
+            }
+            return null;
+        }
+
+        @Override
+        public int compareValue(Object source, Object target) throws ParseException {
+            if (source != null && target != null) {
+                Preconditions.checkArgument(source.getClass().equals(target.getClass()));
+            }
+            Enum<?> sv = (Enum<?>) Reflector.parseValue(type, source);
+            if (source != null && sv == null) {
+                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
+            }
+            Enum<?> tv = (Enum<?>) Reflector.parseValue(type, target);
+            if (target != null && tv == null) {
+                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
+            }
+
+            int osv = (sv == null ? 0 : sv.ordinal());
+            int otv = (tv == null ? 0 : tv.ordinal());
+            return osv - otv;
+        }
     }
+
     @Getter
     @Accessors(fluent = true)
     public static class DtComplex extends DataType {
