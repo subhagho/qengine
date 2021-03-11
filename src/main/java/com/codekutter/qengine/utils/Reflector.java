@@ -315,20 +315,6 @@ public class Reflector {
     }
 
 
-    public static Method getSetter(Class<?> type, Field f) {
-        Preconditions.checkArgument(f != null);
-
-        String method = "set" + StringUtils.capitalize(f.getName());
-        Method m = MethodUtils.getAccessibleMethod(type, method,
-                f.getType());
-        if (m == null) {
-            method = f.getName();
-            m = MethodUtils.getAccessibleMethod(type, method,
-                    f.getType());
-        }
-        return m;
-    }
-
     /**
      * Get the value of the specified field from the object passed.
      * This assumes standard bean Getters/Setters.
@@ -470,6 +456,20 @@ public class Reflector {
         if (st != null && !st.equals(Object.class)) {
             getFields(st, fields);
         }
+    }
+
+    public static Method getSetter(Class<?> type, Field f) {
+        Preconditions.checkArgument(f != null);
+
+        String method = "set" + StringUtils.capitalize(f.getName());
+        Method m = MethodUtils.getAccessibleMethod(type, method,
+                f.getType());
+        if (m == null) {
+            method = f.getName();
+            m = MethodUtils.getAccessibleMethod(type, method,
+                    f.getType());
+        }
+        return m;
     }
 
 }

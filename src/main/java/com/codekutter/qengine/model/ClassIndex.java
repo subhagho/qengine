@@ -1,5 +1,6 @@
 package com.codekutter.qengine.model;
 
+import com.codekutter.qengine.common.QueryCacheManager;
 import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.utils.Reflector;
 import com.google.common.base.Preconditions;
@@ -8,8 +9,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import org.apache.commons.lang3.reflect.MethodUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -69,19 +72,30 @@ public class ClassIndex<T> {
                 } else {
                     p = String.format("%s/%s", path, f.getName());
                 }
+                Class<?> tt = f.getType();
                 if (!Reflector.isPrimitiveTypeOrString(f.getType())
                         && f.getType() != Class.class && f.getType() != Object.class) {
                     if (Reflector.implementsInterface(List.class, f.getType())) {
-                        Class<?> it = Reflector.getGenericListType(f);
-                        setup(it, p);
+                        tt = Reflector.getGenericListType(f);
                     } else if (Reflector.implementsInterface(Set.class, f.getType())) {
-                        Class<?> it = Reflector.getGenericSetType(f);
-                        setup(it, p);
+                        tt = Reflector.getGenericSetType(f);
                     } else if (Reflector.implementsInterface(Map.class, f.getType())) {
-                        Class<?> it = Reflector.getGenericMapValueType(f);
-                        setup(it, p);
-                    } else
-                        setup(f.getType(), p);
+                        tt = Reflector.getGenericMapValueType(f);
+                    }
+                    if (!tt.equals(type)) {
+                        ClassIndex<?> ci = QueryCacheManager.get().getClassIndex(tt);
+                        if (ci == null) {
+                            throw new Exception(String.format("Error getting class index for type. [type=%s]", tt.getCanonicalName()));
+                        }
+                        Map<String, IndexedField> idx = ci.index();
+                        for (String key : idx.keySet()) {
+                            String k = String.format("%s/%s", p, key);
+                            IndexedField ff = idx.get(key);
+                            index.put(k, ff);
+                        }
+                    } else {
+                        setup(tt, path);
+                    }
                 }
                 IndexedField ff = new IndexedField();
                 ff.field = f;
@@ -120,9 +134,63 @@ public class ClassIndex<T> {
         return buffer.toString();
     }
 
-    public Object getFieldValue(@NonNull Object source, @NonNull FieldPath path) {
+    public Object getFieldValue(@NonNull Object source, @NonNull FieldPath path) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         Preconditions.checkArgument(index.size() > 0);
+        Preconditions.checkArgument(Reflector.isSuperType(type, source.getClass()));
+        return getFieldValue(source, path, 0, null);
+    }
 
+    private Object getFieldValue(Object source, FieldPath path, int idx, String journey) throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        String p = journey;
+        FieldPath.PathNode pn = path.getNodes()[idx];
+        if (Strings.isNullOrEmpty(p)) {
+            p = pn.name();
+        } else {
+            p = String.format("%s/%s", p, pn.name());
+        }
+        IndexedField ff = index.get(p);
+        if (ff == null) {
+            throw new IllegalArgumentException(String.format("Specified field path not found. [type=%s][path=%s]", type.getCanonicalName(), p));
+        }
+        Object value = MethodUtils.invokeMethod(source, ff.getter.getName());
+        if (value != null) {
+            if (idx == (path.getNodes().length - 1)) {
+                return value;
+            }
+            if (Reflector.implementsInterface(List.class, value.getClass())) {
+                if (!Reflector.implementsInterface(List.class, ff.field.getType())) {
+                    throw new IllegalArgumentException(String.format("Type mismatch. [object=%s][field type=%s]",
+                            value.getClass().getCanonicalName(), ff.field.getType().getCanonicalName()));
+                }
+                if (!(pn instanceof FieldPath.CollectionPathNode)) {
+                    throw new IllegalArgumentException(
+                            String.format("Invalid Path node. [expected collection path node.][path=%s][node=%s]",
+                                    path.getPath(), pn.name()));
+                }
+                String sii = ((FieldPath.CollectionPathNode) pn).key();
+                Preconditions.checkState(!Strings.isNullOrEmpty(sii));
+                int ii = Integer.parseInt(sii);
+                List<?> lv = (List<?>) value;
+                value = lv.get(ii);
+            } if (Reflector.implementsInterface(Map.class, value.getClass())) {
+                if (!Reflector.implementsInterface(Map.class, ff.field.getType())) {
+                    throw new IllegalArgumentException(String.format("Type mismatch. [object=%s][field type=%s]",
+                            value.getClass().getCanonicalName(), ff.field.getType().getCanonicalName()));
+                }
+                if (!(pn instanceof FieldPath.CollectionPathNode)) {
+                    throw new IllegalArgumentException(
+                            String.format("Invalid Path node. [expected collection path node.][path=%s][node=%s]",
+                                    path.getPath(), pn.name()));
+                }
+                String sii = ((FieldPath.CollectionPathNode) pn).key();
+                Preconditions.checkState(!Strings.isNullOrEmpty(sii));
+                Map<?, ?> map = (Map<?, ?>) value;
+                Class<?> kt = Reflector.getGenericMapKeyType(ff.field);
+                Object key = Reflector.parseStringValue(kt, sii);
+                value = map.get(key);
+            }
+            return getFieldValue(value, path, idx + 1, p);
+        }
         return null;
     }
 
