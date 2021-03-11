@@ -171,7 +171,12 @@ public abstract class DataType {
         }
     }
 
-    public static class DtShort extends BasicDataType<Short> {
+    public static class DtShort extends BasicDataType<Short>
+            implements Operations.Sum<Short>,
+            Operations.Subtract<Short>,
+            Operations.Multiply<Short>,
+            Operations.Divide<Short>,
+            Operations.Power<Short> {
         public DtShort() {
             super("short", Short.class);
         }
@@ -210,9 +215,48 @@ public abstract class DataType {
             tv = (tv == null ? 0 : tv);
             return sv - tv;
         }
+
+        @Override
+        public Short sum(@NonNull Short[] values) throws OperationException {
+            short sum = 0;
+            for (short v : values) {
+                sum += v;
+            }
+            return sum;
+        }
+
+        @Override
+        public Short subtract(@NonNull Short source, @NonNull Short value) throws OperationException {
+            return (short) (source - value);
+        }
+
+        @Override
+        public Short multiply(@NonNull Short[] values) throws OperationException {
+            short mul = 1;
+            for (short v : values) {
+                mul *= v;
+            }
+            return mul;
+        }
+
+        @Override
+        public Short divide(@NonNull Short numerator, @NonNull Short denominator) throws OperationException {
+            Preconditions.checkArgument(denominator != 0);
+            return (short) (numerator / denominator);
+        }
+
+        @Override
+        public double power(@NonNull Short value, @NonNull Double power) throws OperationException {
+            return Math.pow(value, power);
+        }
     }
 
-    public static class DtInteger extends BasicDataType<Integer> {
+    public static class DtInteger extends BasicDataType<Integer>
+            implements Operations.Sum<Integer>,
+            Operations.Subtract<Integer>,
+            Operations.Multiply<Integer>,
+            Operations.Divide<Integer>,
+            Operations.Power<Integer> {
         public DtInteger() {
             super("integer", Integer.class);
         }
@@ -251,9 +295,48 @@ public abstract class DataType {
             tv = (tv == null ? 0 : tv);
             return sv - tv;
         }
+
+        @Override
+        public Integer sum(@NonNull Integer[] values) throws OperationException {
+            int sum = 0;
+            for (int v : values) {
+                sum += v;
+            }
+            return sum;
+        }
+
+        @Override
+        public Integer subtract(@NonNull Integer source, @NonNull Integer value) throws OperationException {
+            return source - value;
+        }
+
+        @Override
+        public Integer multiply(@NonNull Integer[] values) throws OperationException {
+            int mul = 1;
+            for (int v : values) {
+                mul *= v;
+            }
+            return mul;
+        }
+
+        @Override
+        public Integer divide(@NonNull Integer numerator, @NonNull Integer denominator) throws OperationException {
+            Preconditions.checkArgument(denominator != 0);
+            return numerator / denominator;
+        }
+
+        @Override
+        public double power(@NonNull Integer value, @NonNull Double power) throws OperationException {
+            return Math.pow(value, power);
+        }
     }
 
-    public static class DtLong extends BasicDataType<Long> {
+    public static class DtLong extends BasicDataType<Long>
+            implements Operations.Sum<Long>,
+            Operations.Subtract<Long>,
+            Operations.Multiply<Long>,
+            Operations.Divide<Long>,
+            Operations.Power<Long> {
         public DtLong() {
             super("long", Long.class);
         }
@@ -290,9 +373,48 @@ public abstract class DataType {
             tv = (tv == null ? 0 : tv);
             return (int) (sv - tv);
         }
+
+        @Override
+        public Long sum(@NonNull Long[] values) throws OperationException {
+            long sum = 0;
+            for (long v : values) {
+                sum += v;
+            }
+            return sum;
+        }
+
+        @Override
+        public Long subtract(@NonNull Long source, @NonNull Long value) throws OperationException {
+            return source - value;
+        }
+
+        @Override
+        public Long multiply(@NonNull Long[] values) throws OperationException {
+            long mul = 1;
+            for (long v : values) {
+                mul *= v;
+            }
+            return mul;
+        }
+
+        @Override
+        public Long divide(@NonNull Long numerator, @NonNull Long denominator) throws OperationException {
+            Preconditions.checkArgument(denominator != 0);
+            return numerator / denominator;
+        }
+
+        @Override
+        public double power(@NonNull Long value, @NonNull Double power) throws OperationException {
+            return Math.pow(value, power);
+        }
     }
 
-    public static class DtFloat extends BasicDataType<Float> {
+    public static class DtFloat extends BasicDataType<Float>
+            implements Operations.Sum<Float>,
+            Operations.Subtract<Float>,
+            Operations.Multiply<Float>,
+            Operations.Divide<Float>,
+            Operations.Power<Float> {
         public DtFloat() {
             super("float", Float.class);
         }
@@ -331,9 +453,48 @@ public abstract class DataType {
             tv = (tv == null ? 0 : tv);
             return (int) (sv - tv);
         }
+
+        @Override
+        public Float sum(@NonNull Float[] values) throws OperationException {
+            float sum = 0;
+            for (float v : values) {
+                sum += v;
+            }
+            return sum;
+        }
+
+        @Override
+        public Float subtract(@NonNull Float source, @NonNull Float value) throws OperationException {
+            return source - value;
+        }
+
+        @Override
+        public Float multiply(@NonNull Float[] values) throws OperationException {
+            float mul = 1;
+            for (float v : values) {
+                mul *= v;
+            }
+            return mul;
+        }
+
+        @Override
+        public Float divide(@NonNull Float numerator, @NonNull Float denominator) throws OperationException {
+            Preconditions.checkArgument(denominator != 0);
+            return numerator / denominator;
+        }
+
+        @Override
+        public double power(@NonNull Float value, @NonNull Double power) throws OperationException {
+            return Math.pow(value, power);
+        }
     }
 
-    public static class DtDouble extends BasicDataType<Double> {
+    public static class DtDouble extends BasicDataType<Double>
+            implements Operations.Sum<Double>,
+            Operations.Subtract<Double>,
+            Operations.Multiply<Double>,
+            Operations.Divide<Double>,
+            Operations.Power<Double> {
         public DtDouble() {
             super("double", Double.class);
         }
@@ -369,6 +530,40 @@ public abstract class DataType {
             sv = (sv == null ? 0 : sv);
             tv = (tv == null ? 0 : tv);
             return (int) (sv - tv);
+        }
+
+        @Override
+        public Double sum(@NonNull Double[] values) throws OperationException {
+            double sum = 0;
+            for (double v : values) {
+                sum += v;
+            }
+            return sum;
+        }
+
+        @Override
+        public Double subtract(@NonNull Double source, @NonNull Double value) throws OperationException {
+            return source - value;
+        }
+
+        @Override
+        public Double multiply(@NonNull Double[] values) throws OperationException {
+            double mul = 1;
+            for (double v : values) {
+                mul *= v;
+            }
+            return mul;
+        }
+
+        @Override
+        public Double divide(@NonNull Double numerator, @NonNull Double denominator) throws OperationException {
+            Preconditions.checkArgument(denominator != 0);
+            return numerator / denominator;
+        }
+
+        @Override
+        public double power(@NonNull Double value, @NonNull Double power) throws OperationException {
+            return Math.pow(value, power);
         }
     }
 
@@ -409,7 +604,8 @@ public abstract class DataType {
         }
     }
 
-    public static class DtString extends BasicDataType<String> {
+    public static class DtString extends BasicDataType<String>
+            implements Operations.Concat, Operations.Substring {
         public DtString() {
             super("string", String.class);
         }
@@ -440,6 +636,20 @@ public abstract class DataType {
             sv = (sv == null ? "" : sv);
             tv = (tv == null ? "" : tv);
             return sv.compareTo(tv);
+        }
+
+        @Override
+        public String concat(@NonNull String[] values) throws OperationException {
+            String ret = values[0];
+            for (int ii = 1; ii < values.length; ii++) {
+                ret = ret.concat(values[ii]);
+            }
+            return ret;
+        }
+
+        @Override
+        public String substring(@NonNull String value, int pos, int length) throws OperationException {
+            return value.substring(pos, pos + length);
         }
     }
 
