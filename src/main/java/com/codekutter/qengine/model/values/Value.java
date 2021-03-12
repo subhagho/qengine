@@ -1,5 +1,7 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Vertex;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,14 +16,16 @@ public abstract class Value extends Vertex {
         Constant,
         Parameter,
         Reference,
-        Query
+        Query,
+        Field
     }
 
     @Setter(AccessLevel.NONE)
     private final ValueType type;
-    private DataType dataType;
+    private final DataType dataType;
 
-    public Value(@NonNull ValueType type) {
+    public Value(@NonNull ValueType type, @NonNull DataType dataType) {
         this.type = type;
+        this.dataType = dataType;
     }
 }

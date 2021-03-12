@@ -1,5 +1,6 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.model.DataType;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.NonNull;
@@ -17,8 +18,8 @@ import java.util.Date;
 public class Constant extends Value {
     private String value;
 
-    public Constant() {
-        super(ValueType.Constant);
+    public Constant(@NonNull DataType dataType) {
+        super(ValueType.Constant, dataType);
     }
 
     public boolean getBooleanValue() throws ParseException {

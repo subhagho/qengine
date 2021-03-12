@@ -7,7 +7,7 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public abstract class BaseCondition extends Vertex implements Condition {
+public abstract class BaseCondition extends BooleanVertex {
     private Vertex left;
     private Vertex right;
 }

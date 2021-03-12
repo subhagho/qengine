@@ -1,7 +1,8 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
 import com.codekutter.qengine.common.ReferenceDataManager;
 import com.codekutter.qengine.common.StateException;
+import com.codekutter.qengine.model.DataType;
 import com.google.common.base.Preconditions;
 import lombok.Getter;
 import lombok.NonNull;
@@ -14,8 +15,8 @@ import java.util.Collection;
 public class ReferenceList extends Value {
     private final String name;
 
-    public ReferenceList(@NonNull String name) {
-        super(ValueType.Reference);
+    public ReferenceList(@NonNull DataType dataType, @NonNull String name) {
+        super(ValueType.Reference, dataType);
         this.name = name;
     }
 

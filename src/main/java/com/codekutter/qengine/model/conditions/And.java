@@ -11,25 +11,25 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Or extends BaseCondition {
+public class And extends BaseCondition {
 
     @Override
     public void validate() throws ValidationException {
-        if (left() instanceof Condition) {
+        if (left() instanceof BooleanVertex) {
             throw new ValidationException("Left condition missing or invalid.");
         }
-        ((Condition)left()).validate();
-        if (right() instanceof Condition) {
+        ((BooleanVertex)left()).validate();
+        if (right() instanceof BooleanVertex) {
             throw new ValidationException("Right condition missing or invalid");
         }
-        ((Condition)right()).validate();
+        ((BooleanVertex)right()).validate();
     }
 
     @Override
     public boolean evaluate(@NonNull Object data) throws EvaluationException {
         try {
             validate();
-            return (((BaseCondition)left()).evaluate(data) || ((BaseCondition)right()).evaluate(data));
+            return (((BooleanVertex)right()).evaluate(data) && ((BooleanVertex)left()).evaluate(data));
         } catch (EvaluationException e) {
             throw e;
         } catch (Throwable t) {

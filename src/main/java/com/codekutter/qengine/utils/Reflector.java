@@ -1,13 +1,12 @@
 package com.codekutter.qengine.utils;
 
-import com.codekutter.qengine.model.FieldPath;
+import com.codekutter.qengine.model.values.FieldPath;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.NonNull;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;

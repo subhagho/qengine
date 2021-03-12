@@ -1,7 +1,9 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
 import com.codekutter.qengine.common.ConnectionManager;
+import com.codekutter.qengine.model.DataType;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -13,7 +15,7 @@ public class QueryOutput extends Value {
     private String connection;
     private ConnectionManager.ConnectionTypes connectionType = ConnectionManager.ConnectionTypes.Hibernate;
 
-    public QueryOutput() {
-        super(ValueType.Query);
+    public QueryOutput(@NonNull DataType dataType) {
+        super(ValueType.Query, dataType);
     }
 }

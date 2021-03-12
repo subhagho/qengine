@@ -126,6 +126,7 @@ public abstract class DataType {
 
         public abstract int compareValue(Object source, Object target) throws ParseException;
 
+        public abstract Class<T> getJavaType();
     }
 
     public static class DtBoolean extends BasicDataType<Boolean> {
@@ -168,6 +169,11 @@ public abstract class DataType {
                 rv = (sv == null || !sv ? -1 : 1);
             }
             return rv;
+        }
+
+        @Override
+        public Class<Boolean> getJavaType() {
+            return Boolean.class;
         }
     }
 
@@ -214,6 +220,11 @@ public abstract class DataType {
             sv = (sv == null ? 0 : sv);
             tv = (tv == null ? 0 : tv);
             return sv - tv;
+        }
+
+        @Override
+        public Class<Short> getJavaType() {
+            return Short.class;
         }
 
         @Override
@@ -297,6 +308,11 @@ public abstract class DataType {
         }
 
         @Override
+        public Class<Integer> getJavaType() {
+            return Integer.class;
+        }
+
+        @Override
         public Integer sum(@NonNull Integer[] values) throws OperationException {
             int sum = 0;
             for (int v : values) {
@@ -372,6 +388,11 @@ public abstract class DataType {
             sv = (sv == null ? 0 : sv);
             tv = (tv == null ? 0 : tv);
             return (int) (sv - tv);
+        }
+
+        @Override
+        public Class<Long> getJavaType() {
+            return Long.class;
         }
 
         @Override
@@ -455,6 +476,11 @@ public abstract class DataType {
         }
 
         @Override
+        public Class<Float> getJavaType() {
+            return Float.class;
+        }
+
+        @Override
         public Float sum(@NonNull Float[] values) throws OperationException {
             float sum = 0;
             for (float v : values) {
@@ -533,6 +559,11 @@ public abstract class DataType {
         }
 
         @Override
+        public Class<Double> getJavaType() {
+            return Double.class;
+        }
+
+        @Override
         public Double sum(@NonNull Double[] values) throws OperationException {
             double sum = 0;
             for (double v : values) {
@@ -602,6 +633,11 @@ public abstract class DataType {
             tv = (tv == null ? 0 : tv);
             return (sv - tv);
         }
+
+        @Override
+        public Class<Character> getJavaType() {
+            return Character.class;
+        }
     }
 
     public static class DtString extends BasicDataType<String>
@@ -636,6 +672,11 @@ public abstract class DataType {
             sv = (sv == null ? "" : sv);
             tv = (tv == null ? "" : tv);
             return sv.compareTo(tv);
+        }
+
+        @Override
+        public Class<String> getJavaType() {
+            return String.class;
         }
 
         @Override
@@ -692,6 +733,11 @@ public abstract class DataType {
             tv = (tv == null ? new java.sql.Date(0) : tv);
             return sv.compareTo(tv);
         }
+
+        @Override
+        public Class<java.sql.Date> getJavaType() {
+            return java.sql.Date.class;
+        }
     }
 
     public static class DtDateTime extends BasicDataType<Date> {
@@ -733,6 +779,11 @@ public abstract class DataType {
             tv = (tv == null ? new Date(0) : tv);
             return sv.compareTo(tv);
         }
+
+        @Override
+        public Class<Date> getJavaType() {
+            return Date.class;
+        }
     }
 
     public static class DtTimestamp extends BasicDataType<Timestamp> {
@@ -770,6 +821,11 @@ public abstract class DataType {
             sv = (sv == null ? new Timestamp(0) : sv);
             tv = (tv == null ? new Timestamp(0) : tv);
             return sv.compareTo(tv);
+        }
+
+        @Override
+        public Class<Timestamp> getJavaType() {
+            return Timestamp.class;
         }
     }
 
@@ -867,6 +923,12 @@ public abstract class DataType {
             int osv = (sv == null ? 0 : sv.ordinal());
             int otv = (tv == null ? 0 : tv.ordinal());
             return osv - otv;
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public Class<Enum<T>> getJavaType() {
+            return (Class<Enum<T>>) type;
         }
     }
 

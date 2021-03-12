@@ -2,6 +2,7 @@ package com.codekutter.qengine.model;
 
 import com.codekutter.qengine.common.QueryCacheManager;
 import com.codekutter.qengine.common.ValidationException;
+import com.codekutter.qengine.model.values.FieldPath;
 import com.codekutter.qengine.utils.Reflector;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

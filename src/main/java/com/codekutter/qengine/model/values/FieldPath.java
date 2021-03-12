@@ -1,5 +1,6 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.model.ClassIndex;
 import com.codekutter.qengine.utils.Reflector;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

@@ -10,8 +10,8 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Group extends Vertex implements Condition {
-    private Condition condition;
+public class Group extends BooleanVertex {
+    private BooleanVertex condition;
 
     @Override
     public void validate() throws ValidationException {

@@ -1,5 +1,6 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.model.DataType;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -13,8 +14,8 @@ import lombok.experimental.Accessors;
 public class Parameter extends Value {
     private final String name;
 
-    public Parameter(@NonNull String name) {
-        super(ValueType.Parameter);
+    public Parameter(@NonNull DataType dataType, @NonNull String name) {
+        super(ValueType.Parameter, dataType);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
         this.name = name;
     }

@@ -1,6 +1,7 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.values;
 
 import com.codekutter.qengine.common.ValidationException;
+import com.codekutter.qengine.model.DataType;
 import com.codekutter.qengine.utils.Reflector;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,18 +10,17 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Field extends Vertex {
+public class Field extends Value {
     @Setter(AccessLevel.NONE)
     private final Class<?> entityType;
-    private final DataType dataType;
     @Setter(AccessLevel.NONE)
     private String name;
     @Setter(AccessLevel.NONE)
     private FieldPath path;
 
     public Field(@NonNull Class<?> entityType, @NonNull DataType dataType) {
+        super(ValueType.Field, dataType);
         this.entityType = entityType;
-        this.dataType = dataType;
     }
 
     public Field withPath(@NonNull String path) throws IllegalArgumentException {

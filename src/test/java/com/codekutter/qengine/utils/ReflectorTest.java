@@ -1,9 +1,6 @@
 package com.codekutter.qengine.utils;
 
-import com.codekutter.qengine.model.FieldPath;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
+import com.codekutter.qengine.model.values.FieldPath;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;

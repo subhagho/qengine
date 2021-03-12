@@ -1,6 +1,7 @@
 package com.codekutter.qengine.model;
 
 import com.codekutter.qengine.common.QueryCacheManager;
+import com.codekutter.qengine.model.values.FieldPath;
 import com.codekutter.qengine.utils.LogUtils;
 import com.codekutter.qengine.utils.TestClasses;
 import org.junit.jupiter.api.Test;
