@@ -1,5 +1,7 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.conditions;
 
+import com.codekutter.qengine.model.BooleanVertex;
+import com.codekutter.qengine.model.Vertex;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

@@ -1,7 +1,8 @@
-package com.codekutter.qengine.model;
+package com.codekutter.qengine.model.conditions;
 
 import com.codekutter.qengine.common.EvaluationException;
 import com.codekutter.qengine.common.ValidationException;
+import com.codekutter.qengine.model.BooleanVertex;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
