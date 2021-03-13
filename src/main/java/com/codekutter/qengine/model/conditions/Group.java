@@ -26,6 +26,7 @@ package com.codekutter.qengine.model.conditions;
 import com.codekutter.qengine.common.EvaluationException;
 import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.BooleanVertex;
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -34,8 +35,13 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Group extends BooleanVertex {
-    private BooleanVertex condition;
+public class Group<E> extends BooleanVertex<E> {
+
+    private BooleanVertex<E> condition;
+
+    public Group(@NonNull Query<E> query) {
+        super(query);
+    }
 
     @Override
     public void validate() throws ValidationException {
@@ -53,5 +59,10 @@ public class Group extends BooleanVertex {
             throw new EvaluationException(ve);
         }
         return condition.evaluate(data);
+    }
+
+    @Override
+    public String printString() {
+        return String.format("(%s)", condition.printString());
     }
 }

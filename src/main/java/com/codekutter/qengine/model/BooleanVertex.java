@@ -27,7 +27,11 @@ import com.codekutter.qengine.common.EvaluationException;
 import com.codekutter.qengine.common.ValidationException;
 import lombok.NonNull;
 
-public abstract class BooleanVertex extends Vertex {
+public abstract class BooleanVertex<E> extends Vertex<E> {
+
+    public BooleanVertex(@NonNull Query<E> query) {
+        super(query);
+    }
 
     public abstract void validate() throws ValidationException;
 

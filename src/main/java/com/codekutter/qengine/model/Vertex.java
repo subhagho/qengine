@@ -23,13 +23,23 @@
 
 package com.codekutter.qengine.model;
 
+import com.codekutter.qengine.common.ValidationException;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 @Getter
 @Setter
 @Accessors(fluent = true)
-public abstract class Vertex {
+public abstract class Vertex<T> {
     private String id;
+    private final Query<T> query;
+
+    public Vertex(@NonNull Query<T> query) {
+        this.query = query;
+    }
+
+    public abstract String printString();
+
 }

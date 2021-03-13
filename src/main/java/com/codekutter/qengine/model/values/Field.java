@@ -23,7 +23,11 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
@@ -31,21 +35,42 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Field<T> extends ValueDefinition<T> {
+public class Field<E, T> extends ValueDefinition<E, T> {
+    public static final String __NAME = "field";
+
     @Setter(AccessLevel.NONE)
     private final Class<?> entityType;
     @Setter(AccessLevel.NONE)
     private FieldPath path;
 
-    public Field(@NonNull Class<?> entityType, @NonNull DataType.BasicDataType<T> dataType) {
-        super(ValueType.Field, dataType);
+    public Field(@NonNull Query<E> query,  @NonNull Class<?> entityType, @NonNull DataType.BasicDataType<T> dataType) {
+        super(query, ValueType.Field, dataType);
         this.entityType = entityType;
     }
 
-    public Field withPath(@NonNull String path) throws IllegalArgumentException {
+    public Field<E, T> withPath(@NonNull String path) throws IllegalArgumentException {
         this.path = new FieldPath();
         this.path.withPath(path, entityType);
 
         return this;
+    }
+
+    @Override
+    public String printString() {
+        return String.format("`%s:%s`", __NAME, path);
+    }
+
+    @Override
+    public void parse(@NonNull String input) throws ValidationException {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(input));
+        input = input.replaceAll("\\s*", "");
+        String[] parts = input.split(":");
+        if (parts.length != 2) {
+            throw new ValidationException(String.format("Invalid Field string. [string=%s]", input));
+        }
+        if (Strings.isNullOrEmpty(parts[0]) || parts[0].compareToIgnoreCase(__NAME) != 0) {
+            throw new ValidationException(String.format("Invalid Field string: field keyword missing. [string=%s]", input));
+        }
+        withPath(parts[1]);
     }
 }

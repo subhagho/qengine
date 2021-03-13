@@ -23,7 +23,9 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import com.codekutter.qengine.model.Vertex;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -34,11 +36,13 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public abstract class ValueDefinition<T> extends Vertex {
+public abstract class ValueDefinition<E, T> extends Vertex<E> {
     @Setter(AccessLevel.NONE)
     private final ValueType type;
     private final DataType.BasicDataType<T> dataType;
-    public ValueDefinition(@NonNull ValueType type, @NonNull DataType.BasicDataType<T> dataType) {
+
+    public ValueDefinition(@NonNull Query<E> query, @NonNull ValueType type, @NonNull DataType.BasicDataType<T> dataType) {
+        super(query);
         this.type = type;
         this.dataType = dataType;
     }
@@ -50,4 +54,6 @@ public abstract class ValueDefinition<T> extends Vertex {
         Query,
         Field
     }
+
+    public abstract void parse(@NonNull String input) throws ValidationException;
 }

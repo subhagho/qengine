@@ -23,7 +23,9 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import lombok.Getter;
@@ -34,13 +36,33 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Parameter<T> extends ValueDefinition<T> {
+public class Parameter<E, T> extends ValueDefinition<E, T> {
+    public static final String __NAME = "param";
+
     private final String name;
     private boolean dynamic = true;
 
-    public Parameter(@NonNull DataType.BasicDataType<T> dataType, @NonNull String name) {
-        super(ValueType.Parameter, dataType);
+    public Parameter(@NonNull Query<E> query, @NonNull DataType.BasicDataType<T> dataType, @NonNull String name) {
+        super(query, ValueType.Parameter, dataType);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
         this.name = name;
+    }
+
+    @Override
+    public String printString() {
+        return String.format("`%s:%s`", __NAME, name);
+    }
+
+    @Override
+    public void parse(@NonNull String input) throws ValidationException {
+        Preconditions.checkArgument(!jdk.internal.joptsimple.internal.Strings.isNullOrEmpty(input));
+        input = input.replaceAll("\\s*", "");
+        String[] parts = input.split(":");
+        if (parts.length != 2) {
+            throw new ValidationException(String.format("Invalid Parameter string. [string=%s]", input));
+        }
+        if (Strings.isNullOrEmpty(parts[0]) || parts[0].compareToIgnoreCase(__NAME) != 0) {
+            throw new ValidationException(String.format("Invalid Parameter string: Parameter keyword missing. [string=%s]", input));
+        }
     }
 }

@@ -27,7 +27,7 @@ options {
 	tokenVocab = SQLiteLexer;
 }
 
-parse: ( sql_stmt_list | error)* EOF;
+paree: ( sql_stmt_list | error)* EOF;
 
 error:
 	UNEXPECTED_CHAR {

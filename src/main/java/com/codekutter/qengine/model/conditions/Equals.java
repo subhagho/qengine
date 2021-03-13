@@ -26,6 +26,7 @@ package com.codekutter.qengine.model.conditions;
 import com.codekutter.qengine.common.EvaluationException;
 import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -34,10 +35,13 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Equals<T> extends BaseCondition {
+public class Equals<E, T> extends BaseCondition<E> {
+    public static final String __OPERATION = "=";
+
     private final DataType.BasicDataType<T> dataType;
 
-    public Equals(@NonNull DataType.BasicDataType<T> dataType) {
+    public Equals(@NonNull Query<E> query, @NonNull DataType.BasicDataType<T> dataType) {
+        super(query);
         this.dataType = dataType;
     }
 
@@ -54,5 +58,10 @@ public class Equals<T> extends BaseCondition {
     @Override
     public boolean evaluate(@NonNull Object data) throws EvaluationException {
         return false;
+    }
+
+    @Override
+    public String printString() {
+        return String.format("%s %s %s", left().printString(), __OPERATION, right().printString());
     }
 }

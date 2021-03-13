@@ -23,7 +23,9 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -32,10 +34,21 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class FieldAlias<T> extends Field<T> {
+public class FieldAlias<E, T> extends Field<E, T> {
+    public static final String __NAME = "alias";
     private String name;
 
-    public FieldAlias(@NonNull Class<?> entityType, DataType.@NonNull BasicDataType<T> dataType) {
-        super(entityType, dataType);
+    public FieldAlias(@NonNull Query<E> query, @NonNull Class<?> entityType, DataType.@NonNull BasicDataType<T> dataType) {
+        super(query, entityType, dataType);
+    }
+
+    @Override
+    public String printString() {
+        return String.format("%s:%s", __NAME, name);
+    }
+
+    @Override
+    public void parse(@NonNull String input) throws ValidationException {
+        super.parse(input);
     }
 }

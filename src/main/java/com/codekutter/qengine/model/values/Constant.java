@@ -23,7 +23,9 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import com.google.common.base.Strings;
 import lombok.Getter;
 import lombok.NonNull;
@@ -38,11 +40,11 @@ import java.util.Date;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Constant<T> extends ValueDefinition<T> {
+public class Constant<E, T> extends ValueDefinition<E, T> {
     private String value;
 
-    public Constant(@NonNull DataType.BasicDataType<T> dataType) {
-        super(ValueType.Constant, dataType);
+    public Constant(@NonNull Query<E> query, @NonNull DataType.BasicDataType<T> dataType) {
+        super(query, ValueType.Constant, dataType);
     }
 
     public boolean getBooleanValue() throws ParseException {
@@ -126,5 +128,16 @@ public class Constant<T> extends ValueDefinition<T> {
 
     public long getTimestampValue() throws ParseException {
         return getLongValue();
+    }
+
+    @Override
+    public String printString() {
+
+        return null;
+    }
+
+    @Override
+    public void parse(@NonNull String input) throws ValidationException {
+
     }
 }

@@ -26,6 +26,7 @@ package com.codekutter.qengine.model.conditions;
 import com.codekutter.qengine.common.EvaluationException;
 import com.codekutter.qengine.common.ValidationException;
 import com.codekutter.qengine.model.BooleanVertex;
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -35,29 +36,39 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class And extends BaseCondition {
+public class And<E> extends BaseCondition<E> {
+    public static final String __NAME = "AND";
+
+    public And(@NonNull Query<E> query) {
+        super(query);
+    }
 
     @Override
     public void validate() throws ValidationException {
         if (left() instanceof BooleanVertex) {
             throw new ValidationException("Left condition missing or invalid.");
         }
-        ((BooleanVertex) left()).validate();
+        ((BooleanVertex<E>) left()).validate();
         if (right() instanceof BooleanVertex) {
             throw new ValidationException("Right condition missing or invalid");
         }
-        ((BooleanVertex) right()).validate();
+        ((BooleanVertex<E>) right()).validate();
     }
 
     @Override
     public boolean evaluate(@NonNull Object data) throws EvaluationException {
         try {
             validate();
-            return (((BooleanVertex) right()).evaluate(data) && ((BooleanVertex) left()).evaluate(data));
+            return (((BooleanVertex<E>) right()).evaluate(data) && ((BooleanVertex<E>) left()).evaluate(data));
         } catch (EvaluationException e) {
             throw e;
         } catch (Throwable t) {
             throw new EvaluationException(t);
         }
+    }
+
+    @Override
+    public String printString() {
+        return String.format("%s %s %s", left().printString(), __NAME, right().printString());
     }
 }

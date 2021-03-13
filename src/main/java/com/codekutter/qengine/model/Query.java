@@ -42,6 +42,7 @@ import java.util.Map;
 @Setter
 @Accessors(fluent = true)
 public class Query<T> {
+    private String name;
     private final Class<T> type;
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)

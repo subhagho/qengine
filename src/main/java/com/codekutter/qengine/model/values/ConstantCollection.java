@@ -24,6 +24,7 @@
 package com.codekutter.qengine.model.values;
 
 import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -34,14 +35,14 @@ import java.util.List;
 
 @Getter
 @Accessors(fluent = true)
-public class ConstantCollection<T> extends ValueDefinition {
+public class ConstantCollection<E, T> extends ValueDefinition<E, T> {
     private List<T> values;
 
-    public ConstantCollection(@NonNull DataType.BasicDataType<T> dataType) {
-        super(ValueType.Constant, dataType);
+    public ConstantCollection(@NonNull Query<E> query, @NonNull DataType.BasicDataType<T> dataType) {
+        super(query, ValueType.Constant, dataType);
     }
 
-    public ConstantCollection<T> add(@NonNull T value) {
+    public ConstantCollection<E, T> add(@NonNull T value) {
         if (values == null) {
             values = new ArrayList<>();
         }

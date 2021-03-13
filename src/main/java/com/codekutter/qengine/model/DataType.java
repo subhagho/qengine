@@ -249,8 +249,21 @@ public abstract class DataType {
         public abstract int compareValue(Object source, Object target) throws ParseException;
 
         public abstract Class<T> getJavaType();
+
+        public abstract String printString(@NonNull String value);
     }
 
+    public static abstract class NumericDataType<T> extends BasicDataType<T> {
+
+        protected NumericDataType(@NonNull String name, @NonNull Class<?> type) {
+            super(name, type);
+        }
+
+        @Override
+        public String printString(@NonNull String value) {
+            return value;
+        }
+    }
     public static class DtBoolean extends BasicDataType<Boolean> {
         public DtBoolean() {
             super("boolean", Boolean.class);
@@ -297,9 +310,21 @@ public abstract class DataType {
         public Class<Boolean> getJavaType() {
             return Boolean.class;
         }
+
+        @Override
+        public String printString(@NonNull String value) {
+            String r = "false";
+            if (!Strings.isNullOrEmpty(value)) {
+                value = value.trim().toLowerCase();
+                if (value.compareTo("1") == 0 || value.compareTo("true") == 0) {
+                    r = "true";
+                }
+            }
+            return r;
+        }
     }
 
-    public static class DtShort extends BasicDataType<Short>
+    public static class DtShort extends NumericDataType<Short>
             implements Operations.Sum<Short>,
             Operations.Subtract<Short>,
             Operations.Multiply<Short>,
@@ -435,6 +460,11 @@ public abstract class DataType {
         }
 
         @Override
+        public String printString(@NonNull String value) {
+            return null;
+        }
+
+        @Override
         public Integer sum(@NonNull Integer[] values) throws OperationException {
             int sum = 0;
             for (int v : values) {
@@ -469,7 +499,7 @@ public abstract class DataType {
         }
     }
 
-    public static class DtLong extends BasicDataType<Long>
+    public static class DtLong extends NumericDataType<Long>
             implements Operations.Sum<Long>,
             Operations.Subtract<Long>,
             Operations.Multiply<Long>,
@@ -552,7 +582,7 @@ public abstract class DataType {
         }
     }
 
-    public static class DtFloat extends BasicDataType<Float>
+    public static class DtFloat extends NumericDataType<Float>
             implements Operations.Sum<Float>,
             Operations.Subtract<Float>,
             Operations.Multiply<Float>,
@@ -637,7 +667,7 @@ public abstract class DataType {
         }
     }
 
-    public static class DtDouble extends BasicDataType<Double>
+    public static class DtDouble extends NumericDataType<Double>
             implements Operations.Sum<Double>,
             Operations.Subtract<Double>,
             Operations.Multiply<Double>,
@@ -719,49 +749,6 @@ public abstract class DataType {
             return Math.pow(value, power);
         }
     }
-
-    public static class DtChar extends BasicDataType<Character> {
-        public DtChar() {
-            super("char", Character.class);
-        }
-
-        @Override
-        public short compareTo(@NonNull DataType target) {
-            if (equals(target)) {
-                return 0;
-            }
-            return RET_INCOMPATIBLE;
-        }
-
-        @Override
-        public Character fromString(@NonNull String value) throws ParseException {
-            if (!Strings.isNullOrEmpty(value)) {
-                return value.charAt(0);
-            }
-            return null;
-        }
-
-        @Override
-        public int compareValue(Object source, Object target) throws ParseException {
-            Character sv = Reflector.parseValue(Character.class, source);
-            if (source != null && sv == null) {
-                throw new ParseException(String.format("Invalid Value type (source): type=%s", source.getClass().getCanonicalName()), 0);
-            }
-            Character tv = Reflector.parseValue(Character.class, target);
-            if (target != null && tv == null) {
-                throw new ParseException(String.format("Invalid Value type (target): type=%s", target.getClass().getCanonicalName()), 0);
-            }
-            sv = (sv == null ? 0 : sv);
-            tv = (tv == null ? 0 : tv);
-            return (sv - tv);
-        }
-
-        @Override
-        public Class<Character> getJavaType() {
-            return Character.class;
-        }
-    }
-
     public static class DtString extends BasicDataType<String>
             implements Operations.Concat, Operations.Substring {
         public DtString() {
@@ -799,6 +786,11 @@ public abstract class DataType {
         @Override
         public Class<String> getJavaType() {
             return String.class;
+        }
+
+        @Override
+        public String printString(@NonNull String value) {
+            return String.format("\"%s\"", value);
         }
 
         @Override
@@ -860,6 +852,17 @@ public abstract class DataType {
         public Class<java.sql.Date> getJavaType() {
             return java.sql.Date.class;
         }
+
+        @Override
+        public String printString(@NonNull String value) {
+            try {
+                SimpleDateFormat df = new SimpleDateFormat();
+                df.parse(value);
+                return String.format("\"%s\"", value);
+            } catch (Exception ex) {
+                throw new IllegalArgumentException(String.format("Invalid SQL Date format. [input=%s]", value), ex);
+            }
+        }
     }
 
     public static class DtDateTime extends BasicDataType<Date> {
@@ -906,6 +909,17 @@ public abstract class DataType {
         public Class<Date> getJavaType() {
             return Date.class;
         }
+
+        @Override
+        public String printString(@NonNull String value) {
+            try {
+                SimpleDateFormat df = new SimpleDateFormat();
+                df.parse(value);
+                return String.format("\"%s\"", value);
+            } catch (Exception ex) {
+                throw new IllegalArgumentException(String.format("Invalid SQL Date format. [input=%s]", value), ex);
+            }
+        }
     }
 
     public static class DtTimestamp extends BasicDataType<Timestamp> {
@@ -948,6 +962,16 @@ public abstract class DataType {
         @Override
         public Class<Timestamp> getJavaType() {
             return Timestamp.class;
+        }
+
+        @Override
+        public String printString(@NonNull String value) {
+            try {
+                Timestamp.valueOf(value);
+                return String.format("\"%s\"", value);
+            } catch (Exception ex) {
+                throw new IllegalArgumentException(String.format("Invalid SQL Date format. [input=%s]", value), ex);
+            }
         }
     }
 
@@ -1051,6 +1075,11 @@ public abstract class DataType {
         @SuppressWarnings("unchecked")
         public Class<Enum<T>> getJavaType() {
             return (Class<Enum<T>>) type;
+        }
+
+        @Override
+        public String printString(@NonNull String value) {
+            return String.format("\"%s\"", value);
         }
     }
 

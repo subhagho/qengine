@@ -23,6 +23,7 @@
 
 package com.codekutter.qengine.model.values;
 
+import com.codekutter.qengine.model.Query;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -31,11 +32,11 @@ import lombok.experimental.Accessors;
 @Getter
 @Setter
 @Accessors(fluent = true)
-public class Value<T> extends Constant<T> {
-    private final ValueDefinition<T> definition;
+public class Value<E, T> extends Constant<E, T> {
+    private final ValueDefinition<E, T> definition;
 
-    public Value(@NonNull ValueDefinition<T> definition) {
-        super(definition.dataType());
+    public Value(@NonNull Query<E> query, @NonNull ValueDefinition<E, T> definition) {
+        super(query, definition.dataType());
         this.definition = definition;
     }
 }
