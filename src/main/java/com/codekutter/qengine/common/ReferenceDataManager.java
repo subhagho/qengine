@@ -1,3 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing,
+ *  * software distributed under the License is distributed on an
+ *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  * KIND, either express or implied.  See the License for the
+ *  * specific language governing permissions and limitations
+ *  * under the License.
+ *  *
+ *  * Copyright (c) 2021
+ *  * Date: 13/03/21, 2:45 PM
+ *  * Subho Ghosh (subho dot ghosh at outlook.com)
+ */
+
 package com.codekutter.qengine.common;
 
 import com.codekutter.qengine.utils.LogUtils;
@@ -13,15 +36,26 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ReferenceDataManager {
+    public static final ReferenceDataManager __instance = new ReferenceDataManager();
     private static final String CACHE_EXTERNAL_DATA = "cache.data.external";
-
-    private ObjectState state = new ObjectState();
-    private Map<String, Collection<?>> maps = new HashMap<>();
-    private Map<String, ExternalDataList> external = new HashMap<>();
+    private final ObjectState state = new ObjectState();
+    private final Map<String, Collection<?>> maps = new HashMap<>();
+    private final Map<String, ExternalDataList> external = new HashMap<>();
     private CacheManager cacheManager;
-    private ReentrantLock edcLock = new ReentrantLock();
+    private final ReentrantLock edcLock = new ReentrantLock();
 
     private ReferenceDataManager() {
+    }
+
+    public static void setup() throws ConfigurationException {
+        synchronized (__instance) {
+            if (__instance.state.getState() != EObjectState.Available) __instance.init();
+        }
+    }
+
+    public static ReferenceDataManager get() throws StateException {
+        __instance.state.check(EObjectState.Available, ReferenceDataManager.class);
+        return __instance;
     }
 
     private void init() throws ConfigurationException {
@@ -72,7 +106,7 @@ public class ReferenceDataManager {
             Cache<String, Collection> cache = cacheManager.getCache(CACHE_EXTERNAL_DATA, String.class, Collection.class);
             if (cache != null) {
                 Collection<T> values = cache.get(el.name());
-                if (values != null) return values;
+                return values;
             }
         }
         return null;
@@ -102,18 +136,5 @@ public class ReferenceDataManager {
         } finally {
             edcLock.unlock();
         }
-    }
-
-    public static final ReferenceDataManager __instance = new ReferenceDataManager();
-
-    public static void setup() throws ConfigurationException {
-        synchronized (__instance) {
-            if (__instance.state.getState() != EObjectState.Available) __instance.init();
-        }
-    }
-
-    public static ReferenceDataManager get() throws StateException {
-        __instance.state.check(EObjectState.Available, ReferenceDataManager.class);
-        return __instance;
     }
 }

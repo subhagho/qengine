@@ -21,20 +21,38 @@
  *  * Subho Ghosh (subho dot ghosh at outlook.com)
  */
 
-package com.codekutter.qengine.common;
+package com.codekutter.qengine.model.schema;
 
-public class DataStoreException extends Exception {
-    private static final String __PREFIX = "Data Source Error : %s";
+import com.google.common.base.Preconditions;
+import jdk.internal.joptsimple.internal.Strings;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
-    public DataStoreException(String message) {
-        super(String.format(__PREFIX, message));
-    }
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
-    public DataStoreException(String message, Throwable cause) {
-        super(String.format(__PREFIX, message), cause);
-    }
+@Getter
+@Setter
+@Entity
+@Table(name = "qe_parameters")
+public class TParameter {
+    @Id
+    private String id;
+    @Column(name = "name")
+    private String name;
+    @Column(name = "data_type")
+    private String type;
+    @Column(name = "is_dynamic")
+    private boolean dynamic;
+    @Column(name = "description")
+    private String description;
 
-    public DataStoreException(Throwable cause) {
-        super(String.format(__PREFIX, cause.getLocalizedMessage()), cause);
+    public TParameter withId(@NonNull String id) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(id));
+        this.id = id;
+        return this;
     }
 }

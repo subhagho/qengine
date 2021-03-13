@@ -21,20 +21,33 @@
  *  * Subho Ghosh (subho dot ghosh at outlook.com)
  */
 
-package com.codekutter.qengine.common;
+package com.codekutter.qengine.model.values;
 
-public class DataStoreException extends Exception {
-    private static final String __PREFIX = "Data Source Error : %s";
+import com.codekutter.qengine.model.DataType;
+import com.codekutter.qengine.model.Vertex;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
-    public DataStoreException(String message) {
-        super(String.format(__PREFIX, message));
+@Getter
+@Setter
+@Accessors(fluent = true)
+public abstract class ValueDefinition<T> extends Vertex {
+    @Setter(AccessLevel.NONE)
+    private final ValueType type;
+    private final DataType.BasicDataType<T> dataType;
+    public ValueDefinition(@NonNull ValueType type, @NonNull DataType.BasicDataType<T> dataType) {
+        this.type = type;
+        this.dataType = dataType;
     }
 
-    public DataStoreException(String message, Throwable cause) {
-        super(String.format(__PREFIX, message), cause);
-    }
-
-    public DataStoreException(Throwable cause) {
-        super(String.format(__PREFIX, cause.getLocalizedMessage()), cause);
+    public enum ValueType {
+        Constant,
+        Parameter,
+        Reference,
+        Query,
+        Field
     }
 }

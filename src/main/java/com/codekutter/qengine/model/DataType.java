@@ -1,3 +1,26 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ *  * or more contributor license agreements.  See the NOTICE file
+ *  * distributed with this work for additional information
+ *  * regarding copyright ownership.  The ASF licenses this file
+ *  * to you under the Apache License, Version 2.0 (the
+ *  * "License"); you may not use this file except in compliance
+ *  * with the License.  You may obtain a copy of the License at
+ *  *
+ *  *   http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing,
+ *  * software distributed under the License is distributed on an
+ *  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ *  * KIND, either express or implied.  See the License for the
+ *  * specific language governing permissions and limitations
+ *  * under the License.
+ *  *
+ *  * Copyright (c) 2021
+ *  * Date: 13/03/21, 2:45 PM
+ *  * Subho Ghosh (subho dot ghosh at outlook.com)
+ */
+
 package com.codekutter.qengine.model;
 
 import com.codekutter.qengine.utils.Reflector;
@@ -24,7 +47,10 @@ public abstract class DataType {
     protected static final int RET_INCOMPATIBLE = -999;
     protected static final int RET_UNDERFLOW = -1;
     protected static final int RET_OVERFLOW = 1;
-
+    private static final String COLLECTION_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*>";
+    private static final String MAP_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*,\\s*(\\w+)\\s*>";
+    private static final Pattern COLLECTION_PATTERN = Pattern.compile(COLLECTION_STRING);
+    private static final Pattern MAP_PATTERN = Pattern.compile(MAP_STRING);
     @Setter(AccessLevel.NONE)
     private final String name;
     private final Class<?> type;
@@ -33,6 +59,102 @@ public abstract class DataType {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(name));
         this.name = name;
         this.type = type;
+    }
+
+    public static DataType parse(@NonNull String value) throws IllegalArgumentException {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(value));
+        BasicDataTypes dts = BasicDataTypes.parse(value);
+        if (dts != null) {
+            return dts.dataType();
+        }
+        Matcher matcher = MAP_PATTERN.matcher(value);
+        if (matcher.matches()) {
+            String kt = matcher.group(2);
+            if (Strings.isNullOrEmpty(kt)) {
+                throw new IllegalArgumentException(String.format("Map Key datatype not found: [type string=%s]", value));
+            }
+            BasicDataType bkt = BasicDataTypes.parseType(kt);
+            if (bkt == null) {
+                throw new IllegalArgumentException(String.format("Data Type not supported: [key type=%s]", kt));
+            }
+            String vt = matcher.group(3);
+            if (Strings.isNullOrEmpty(vt)) {
+                throw new IllegalArgumentException(String.format("Map Value datatype not found: [type string=%s]", value));
+            }
+            DataType vdt = parse(vt);
+            if (vdt == null) {
+                throw new IllegalArgumentException(String.format("Specified Map value type not found: [value type=%s]", vt));
+            }
+            return new DtMap(bkt, vdt);
+        }
+        matcher = COLLECTION_PATTERN.matcher(value);
+        if (matcher.matches()) {
+            String vt = matcher.group(2);
+            if (Strings.isNullOrEmpty(vt)) {
+                throw new IllegalArgumentException(String.format("Collection Inner Type not found: [type string=%s]", value));
+            }
+            BasicDataType bit = BasicDataTypes.parseType(vt);
+            if (bit == null) {
+                throw new IllegalArgumentException(String.format("Data Type not supported: [inner type=%s]", vt));
+            }
+            return new DtCollection(bit);
+        }
+        return null;
+    }
+
+    public static DataType convert(@NonNull Field field) {
+        Class<?> type = field.getType();
+        DataType dt = convert(type);
+        if (dt != null) {
+            return dt;
+        } else if (Reflector.implementsInterface(List.class, type)) {
+            Class<?> itype = Reflector.getGenericListType(field);
+            DataType idt = convert(itype);
+            if (idt != null) {
+                return new DtCollection(idt);
+            }
+        } else if (Reflector.implementsInterface(Map.class, type)) {
+            Class<?> ktype = Reflector.getGenericMapKeyType(field);
+            DataType kdt = convert(ktype);
+            if (kdt != null) {
+                Class<?> vtype = Reflector.getGenericMapValueType(field);
+                DataType vdt = convert(vtype);
+                if (vdt == null) {
+                    vdt = new DtComplex(vtype);
+                }
+                return new DtMap(kdt, vdt);
+            }
+        }
+        return null;
+    }
+
+    public static DataType convert(@NonNull Class<?> type) {
+        if (type.equals(Boolean.class) || type.equals(boolean.class)) {
+            return BasicDataTypes.Boolean.dataType();
+        } else if (type.equals(Short.class) || type.equals(short.class)) {
+            return BasicDataTypes.Short.dataType();
+        } else if (type.equals(Integer.class) || type.equals(int.class)) {
+            return BasicDataTypes.Integer.dataType();
+        } else if (type.equals(Long.class) || type.equals(long.class)) {
+            return BasicDataTypes.Long.dataType();
+        } else if (type.equals(Float.class) || type.equals(float.class)) {
+            return BasicDataTypes.Float.dataType();
+        } else if (type.equals(Double.class) || type.equals(double.class)) {
+            return BasicDataTypes.Double.dataType();
+        } else if (type.equals(Character.class) || type.equals(char.class)) {
+            return BasicDataTypes.Char.dataType();
+        } else if (type.equals(String.class)) {
+            return BasicDataTypes.String.dataType();
+        } else if (type.isEnum()) {
+            return new DtEnum(type);
+        } else if (type.equals(Date.class)) {
+            return BasicDataTypes.DateTime.dataType();
+        } else if (type.equals(java.sql.Date.class)) {
+            return BasicDataTypes.Date.dataType();
+        } else if (type.equals(Timestamp.class)) {
+            return BasicDataTypes.Timestamp.dataType();
+        }
+        return null;
     }
 
     /**
@@ -951,106 +1073,5 @@ public abstract class DataType {
             }
             return RET_INCOMPATIBLE;
         }
-    }
-
-    private static final String COLLECTION_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*>";
-    private static final String MAP_STRING = "(\\w+)\\s*<\\s*(\\w+)\\s*,\\s*(\\w+)\\s*>";
-    private static final Pattern COLLECTION_PATTERN = Pattern.compile(COLLECTION_STRING);
-    private static final Pattern MAP_PATTERN = Pattern.compile(MAP_STRING);
-
-    public static DataType parse(@NonNull String value) throws IllegalArgumentException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(value));
-        BasicDataTypes dts = BasicDataTypes.parse(value);
-        if (dts != null) {
-            return dts.dataType();
-        }
-        Matcher matcher = MAP_PATTERN.matcher(value);
-        if (matcher.matches()) {
-            String kt = matcher.group(2);
-            if (Strings.isNullOrEmpty(kt)) {
-                throw new IllegalArgumentException(String.format("Map Key datatype not found: [type string=%s]", value));
-            }
-            BasicDataType bkt = BasicDataTypes.parseType(kt);
-            if (bkt == null) {
-                throw new IllegalArgumentException(String.format("Data Type not supported: [key type=%s]", kt));
-            }
-            String vt = matcher.group(3);
-            if (Strings.isNullOrEmpty(vt)) {
-                throw new IllegalArgumentException(String.format("Map Value datatype not found: [type string=%s]", value));
-            }
-            DataType vdt = parse(vt);
-            if (vdt == null) {
-                throw new IllegalArgumentException(String.format("Specified Map value type not found: [value type=%s]", vt));
-            }
-            return new DtMap(bkt, vdt);
-        }
-        matcher = COLLECTION_PATTERN.matcher(value);
-        if (matcher.matches()) {
-            String vt = matcher.group(2);
-            if (Strings.isNullOrEmpty(vt)) {
-                throw new IllegalArgumentException(String.format("Collection Inner Type not found: [type string=%s]", value));
-            }
-            BasicDataType bit = BasicDataTypes.parseType(vt);
-            if (bit == null) {
-                throw new IllegalArgumentException(String.format("Data Type not supported: [inner type=%s]", vt));
-            }
-            return new DtCollection(bit);
-        }
-        return null;
-    }
-
-    public static DataType convert(@NonNull Field field) {
-        Class<?> type = field.getType();
-        DataType dt = convert(type);
-        if (dt != null) {
-            return dt;
-        } else if (Reflector.implementsInterface(List.class, type)) {
-            Class<?> itype = Reflector.getGenericListType(field);
-            DataType idt = convert(itype);
-            if (idt != null) {
-                return new DtCollection(idt);
-            }
-        } else if (Reflector.implementsInterface(Map.class, type)) {
-            Class<?> ktype = Reflector.getGenericMapKeyType(field);
-            DataType kdt = convert(ktype);
-            if (kdt != null) {
-                Class<?> vtype = Reflector.getGenericMapValueType(field);
-                DataType vdt = convert(vtype);
-                if (vdt == null) {
-                    vdt = new DtComplex(vtype);
-                }
-                return new DtMap(kdt, vdt);
-            }
-        }
-        return null;
-    }
-
-    public static DataType convert(@NonNull Class<?> type) {
-        if (type.equals(Boolean.class) || type.equals(boolean.class)) {
-            return BasicDataTypes.Boolean.dataType();
-        } else if (type.equals(Short.class) || type.equals(short.class)) {
-            return BasicDataTypes.Short.dataType();
-        } else if (type.equals(Integer.class) || type.equals(int.class)) {
-            return BasicDataTypes.Integer.dataType();
-        } else if (type.equals(Long.class) || type.equals(long.class)) {
-            return BasicDataTypes.Long.dataType();
-        } else if (type.equals(Float.class) || type.equals(float.class)) {
-            return BasicDataTypes.Float.dataType();
-        } else if (type.equals(Double.class) || type.equals(double.class)) {
-            return BasicDataTypes.Double.dataType();
-        } else if (type.equals(Character.class) || type.equals(char.class)) {
-            return BasicDataTypes.Char.dataType();
-        } else if (type.equals(String.class)) {
-            return BasicDataTypes.String.dataType();
-        } else if (type.isEnum()) {
-            return new DtEnum(type);
-        } else if (type.equals(Date.class)) {
-            return BasicDataTypes.DateTime.dataType();
-        } else if (type.equals(java.sql.Date.class)) {
-            return BasicDataTypes.Date.dataType();
-        } else if (type.equals(Timestamp.class)) {
-            return BasicDataTypes.Timestamp.dataType();
-        }
-        return null;
     }
 }

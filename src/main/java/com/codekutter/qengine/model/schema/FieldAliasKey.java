@@ -21,20 +21,21 @@
  *  * Subho Ghosh (subho dot ghosh at outlook.com)
  */
 
-package com.codekutter.qengine.common;
+package com.codekutter.qengine.model.schema;
 
-public class DataStoreException extends Exception {
-    private static final String __PREFIX = "Data Source Error : %s";
+import lombok.Getter;
+import lombok.Setter;
 
-    public DataStoreException(String message) {
-        super(String.format(__PREFIX, message));
-    }
+import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import java.io.Serializable;
 
-    public DataStoreException(String message, Throwable cause) {
-        super(String.format(__PREFIX, message), cause);
-    }
-
-    public DataStoreException(Throwable cause) {
-        super(String.format(__PREFIX, cause.getLocalizedMessage()), cause);
-    }
+@Getter
+@Setter
+@Embeddable
+public class FieldAliasKey implements Serializable {
+    @Column(name = "entity_type")
+    private String type;
+    @Column(name = "name")
+    private String name;
 }
